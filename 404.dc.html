@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; min-height: 100vh; background: #16161A; color: #F2F2F0; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  ::selection { background: #E8410E; color: #fff; }
+  @keyframes ahcInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes ahcGlitch { 0%,92%,100% { transform: translate(0,0); } 93% { transform: translate(-2px,1px); } 95% { transform: translate(3px,-1px); } 97% { transform: translate(-1px,2px); } }
+  @keyframes ahcSweep { 0% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+  @keyframes ahcPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+</style>
+</helmet>
+
+<div style="position: relative; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- faint grid + accent road behind -->
+  <div style="position: absolute; inset: 0; z-index: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 96px), repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 96px); pointer-events: none;"></div>
+  <div style="position: absolute; left: -10%; top: 64%; width: 120%; height: 14px; z-index: 0; background: rgba(232,65,14,0.16); border-top: 1px solid rgba(232,65,14,0.4); border-bottom: 1px solid rgba(232,65,14,0.4); transform: rotate(-8deg); pointer-events: none;"></div>
+  <div style="position: absolute; inset: 0; z-index: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 30%, rgba(8,8,9,0.7) 100%); pointer-events: none;"></div>
+
+  <!-- top bar -->
+  <header style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: 26px clamp(24px,5vw,64px);">
+    <a href="AhnoudCars.dc.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none;">
+      <span style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 11px; background: #1C1C1E; flex-shrink: 0;"><img src="assets/ahnoud-mark-light.svg" alt="Ahnoud Cars" style="width: 26px; height: 26px; object-fit: contain;"></span>
+      <span style="display: flex; flex-direction: column; line-height: 1.15;">
+        <span style="font-weight: 800; font-size: 14px; letter-spacing: 0.16em; color: #F2F0EC;">AHNOUD CARS</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.26em; color: #8C8A86; margin-top: 4px;">EST. 2021 · DUBAI</span>
+      </span>
+    </a>
+    <span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #C9C7C2;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #E8410E; animation: ahcPulse 1.4s ease-in-out infinite;"></span>Error</span>
+  </header>
+
+  <!-- center -->
+  <main style="position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px clamp(24px,5vw,64px) 80px;">
+
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase; color: #E8410E; margin-bottom: 26px; animation: ahcInUp .7s cubic-bezier(.2,.7,.2,1) both;">Error 404 — Not Found</div>
+
+    <!-- big 404 -->
+    <div style="position: relative; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: clamp(120px, 26vw, 320px); line-height: 0.86; letter-spacing: -0.04em; color: #F2F0EC; animation: ahcGlitch 5s steps(1) infinite;">
+      404
+      <!-- scan sweep -->
+      <span style="position: absolute; top: 0; bottom: 0; left: 0; width: 38%; background: linear-gradient(100deg, transparent, rgba(232,65,14,0.18), transparent); mix-blend-mode: screen; animation: ahcSweep 4.5s ease-in-out infinite; pointer-events: none;"></span>
+    </div>
+
+    <h1 style="margin: 18px 0 0; font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(24px, 3.4vw, 38px); font-weight: 700; letter-spacing: -0.02em; animation: ahcInUp .7s cubic-bezier(.2,.7,.2,1) .08s both;">This road leads nowhere.</h1>
+    <p style="margin: 16px 0 0; max-width: 440px; font-size: 16px; line-height: 1.6; color: #9A9A9E; animation: ahcInUp .7s cubic-bezier(.2,.7,.2,1) .16s both;">The page you're looking for has been sold, moved, or never left the lot. Let's get you back to the showroom.</p>
+
+    <!-- actions -->
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 38px; animation: ahcInUp .7s cubic-bezier(.2,.7,.2,1) .24s both;">
+      <a href="AhnoudCars.dc.html" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 28px; background: #E8410E; color: #fff; text-decoration: none; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; transition: background .2s, transform .2s;" style-hover="background: #FF5A26; transform: translateY(-2px);">← Back to showroom</a>
+      <a href="AhnoudCars.dc.html#collection" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 28px; background: transparent; color: #F2F0EC; text-decoration: none; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; transition: border-color .2s, color .2s;" style-hover="border-color: #E8410E; color: #E8410E;">Browse the collection</a>
+    </div>
+  </main>
+
+  <!-- bottom strip -->
+  <footer style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 22px clamp(24px,5vw,64px); border-top: 1px solid rgba(255,255,255,0.08); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6C68;">
+    <span>© 2026 Ahnoud Cars</span>
+    <span>Sheikh Zayed Road · Dubai, U.A.E.</span>
+  </footer>
+
+</div>
+</x-dc>
+</body>
+</html>

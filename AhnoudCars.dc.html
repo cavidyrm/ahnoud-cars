@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  .ahc-card image-slot { transition: transform .6s cubic-bezier(.2,.7,.2,1); will-change: transform; }
+  .ahc-card:hover image-slot { transform: scale(1.07); }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--c-bg); color: var(--c-text); font-family: var(--ahc-body, 'Archivo'), sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; --ahc-mono: 'JetBrains Mono', monospace; --ahc-display: 'Plus Jakarta Sans'; --ahc-serif: 'Plus Jakarta Sans'; --ahc-body: 'Inter'; --r-card: 16px; --r-ui: 8px; --c-bg: #16161A; --c-text: #F2F2F0; --c-navbg: rgba(43,43,45,0.92); --c-input: #141417; --c-modal: #0C0C0E; --c-line: rgba(255,255,255,0.08); --c-line2: rgba(255,255,255,0.1); --c-line3: rgba(255,255,255,0.12); }
+  body.ahc-light { --c-bg: #F1EFE9; --c-text: #1A1714; --c-navbg: rgba(250,249,245,0.95); --c-input: #FFFFFF; --c-modal: #FFFFFF; --c-line: rgba(0,0,0,0.10); --c-line2: rgba(0,0,0,0.13); --c-line3: rgba(0,0,0,0.16); }
+  body.ahc-light .ahc-review { background: #141417 !important; border-color: rgba(232,65,14,0.4) !important; }
+  ::selection { background: #E8410E; color: #fff; }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--c-bg); }
+  ::-webkit-scrollbar-thumb { background: #232326; border-radius: 0; }
+  @keyframes ahcFade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes ahcBackdrop { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ahcPanel { from { opacity: 0; transform: translateY(24px) scale(0.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes ahcZoom { from { transform: scale(1.04); } to { transform: scale(1.13); } }
+  @keyframes ahcPan { from { transform: scale(1.08) translate(2%, -1%); } to { transform: scale(1.12) translate(-2%, 1%); } }
+  @keyframes ahcPulse { 0%, 100% { opacity: 0.32; } 50% { opacity: 1; } }
+  @keyframes ahcInUp { from { transform: translateY(20px); } to { transform: translateY(0); } }
+  @keyframes ahcInL { from { transform: translateX(-46px); } to { transform: translateX(0); } }
+  @keyframes ahcInR { from { transform: translateX(46px); } to { transform: translateX(0); } }
+  @keyframes ahcFrameIn { from { transform: scale(0.95); } to { transform: scale(1); } }
+  select option { background: #131316; color: var(--c-text); }
+  input::placeholder, textarea::placeholder { color: #5A5A5E; }
+
+  /* ===== device-frame preview (driven by the Device tweak) ===== */
+  body.ahc-dev { background: #0E0E10; display: flex; justify-content: center; align-items: flex-start; height: 100vh; overflow: hidden; padding: 28px 20px; box-sizing: border-box; }
+  body.ahc-dev .ahc-root {
+    flex: 0 0 auto;
+    transform: translateZ(0);            /* establishes containing block so the fixed nav + modal pin to the frame, not the window */
+    overflow: hidden !important;          /* root clips; the inner .ahc-scroll layer scrolls, so the fixed nav stays put */
+    box-shadow: 0 50px 130px -34px rgba(0,0,0,0.92), 0 0 0 1px rgba(255,255,255,0.07);
+  }
+  body.ahc-dev .ahc-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  body.ahc-dev .ahc-scroll::-webkit-scrollbar { width: 0; height: 0; }
+  /* in a bounded device frame the footer can be taller than the frame, so its fixed-reveal breaks — flow it normally instead */
+  body.ahc-dev #ahc-footer { position: static !important; }
+  body.ahc-dev #ahc-footer-spacer { display: none !important; }
+  body.ahc-tablet .ahc-root { width: 834px !important; height: calc(100vh - 56px); max-height: 1180px; border-radius: 26px; }
+  body.ahc-mobile .ahc-root { width: 390px !important; height: calc(100vh - 56px); max-height: 880px; border-radius: 40px; }
+  /* hero fills at least one device screen, but grows if its stacked content needs more room (prevents overlap) */
+  body.ahc-tablet #top { height: auto !important; min-height: calc(100vh - 56px) !important; }
+  body.ahc-mobile #top { height: auto !important; min-height: calc(100vh - 56px) !important; }
+
+  /* ===== responsive layout (container queries — also drive the device preview) ===== */
+  @container page (max-width: 900px) {
+    .ahc-hero-center { flex-direction: column !important; gap: 18px !important; }
+    .ahc-hero-side { flex: 0 0 auto !important; text-align: center !important; padding: 0 !important; }
+    .ahc-hero-side span { margin: 0 !important; }
+    .ahc-hero-frame { width: min(86%, 420px) !important; }
+    .ahc-hero-topbar { flex-wrap: wrap !important; gap: 14px !important; }
+    .ahc-hero-creds, .ahc-hero-showroom { display: none !important; }
+    .ahc-hero-bottombar { flex-wrap: wrap !important; gap: 16px !important; }
+    .ahc-why-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .ahc-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .ahc-contact { grid-template-columns: 1fr !important; }
+    .ahc-contact-map { min-height: 380px !important; border-left: none !important; border-top: 1px solid var(--c-line) !important; }
+    .ahc-section { padding-left: clamp(22px,5cqi,40px) !important; padding-right: clamp(22px,5cqi,40px) !important; }
+  }
+  @container page (max-width: 600px) {
+    .ahc-section { padding-top: 84px !important; padding-bottom: 84px !important; }
+    .ahc-why { margin-top: 40px !important; }
+    .ahc-grid-3 { grid-template-columns: minmax(0, 1fr) !important; }
+    .ahc-namegrid { grid-template-columns: 1fr !important; }
+    .ahc-why-grid { grid-template-columns: 1fr !important; }
+    .ahc-hero-frame { width: min(74%, 300px) !important; }
+    .ahc-hero-center { gap: 24px !important; padding: 16px 0 !important; }
+    .ahc-hero-content { padding: 22px 18px !important; }
+    .ahc-hero-bottombar { display: none !important; }
+    .ahc-stats > div { padding: 30px 24px !important; }
+    .ahc-stats > div > div:first-child { font-size: 44px !important; }
+  }
+
+  /* ===== nav + footer responsive (they sit OUTSIDE the query container, so use viewport media for real screens + body-class for the device preview) ===== */
+  @media (max-width: 620px) {
+    #ahc-floating-nav { gap: 2px; padding: 6px; max-width: calc(100% - 24px); }
+    #ahc-floating-nav a[data-navlink], #ahc-floating-nav a[href="#contact"] { padding: 8px 9px; font-size: 11px; letter-spacing: -0.2px; }
+    #ahc-floating-nav a[href="#top"] { width: 34px !important; height: 34px !important; margin-right: 1px; }
+    #ahc-floating-nav a[href="#top"] img { width: 22px !important; height: 22px !important; }
+    .ahc-footer-top { flex-direction: column; gap: 18px; }
+    #ahc-footer { padding: 40px 24px 30px !important; }
+    .ahc-modal-grid { grid-template-columns: 1fr !important; }
+    .ahc-modal-media { border-right: none !important; border-bottom: 1px solid var(--c-line) !important; min-height: 260px !important; }
+    .ahc-modal-overlay { padding: 16px !important; }
+  }
+  body.ahc-mobile #ahc-floating-nav { gap: 2px !important; padding: 6px !important; max-width: calc(100% - 24px); }
+  body.ahc-mobile #ahc-floating-nav a[data-navlink], body.ahc-mobile #ahc-floating-nav a[href="#contact"] { padding: 8px 9px !important; font-size: 11px !important; letter-spacing: -0.2px !important; }
+  body.ahc-mobile #ahc-floating-nav a[href="#top"] { width: 34px !important; height: 34px !important; margin-right: 1px; }
+  body.ahc-mobile #ahc-floating-nav a[href="#top"] img { width: 22px !important; height: 22px !important; }
+  body.ahc-mobile .ahc-footer-top { flex-direction: column; gap: 18px; }
+  body.ahc-mobile #ahc-footer { padding: 40px 24px 30px !important; }
+  body.ahc-mobile .ahc-modal-grid { grid-template-columns: 1fr !important; }
+  body.ahc-mobile .ahc-modal-media { border-right: none !important; border-bottom: 1px solid var(--c-line) !important; min-height: 260px !important; }
+  body.ahc-mobile .ahc-modal-overlay { padding: 16px !important; }
+</style>
+</helmet>
+
+<div id="ahc-root" class="ahc-root" style="position: relative; width: 100%; overflow-x: clip;">
+
+  <!-- ===== FLOATING NAV (bottom) ===== -->
+  <nav id="ahc-floating-nav" class="ahc-nav" style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(24px); opacity: 0; pointer-events: none; z-index: 90; display: flex; align-items: center; gap: 6px; padding: 7px; background: var(--c-navbg); backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%); border: 1px solid var(--c-line); border-radius: var(--r-card); box-shadow: 0 24px 60px -16px rgba(0,0,0,0.85), 0 2px 10px rgba(0,0,0,0.5); transition: opacity .35s ease, transform .35s ease;">
+    <a href="#top" aria-label="Ahnoud Cars — home" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--r-ui); background: #1C1C1E; overflow: hidden; flex-shrink: 0; margin-right: 2px;">
+      <img src="assets/ahnoud-mark-light.svg" alt="Ahnoud Cars" style="width: 25px; height: 25px; object-fit: contain;">
+    </a>
+    <a href="#collection" data-navlink="1" style="padding: 9px 18px; border-radius: var(--r-ui); background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); font-family: 'Archivo', sans-serif; font-size: 14.5px; font-weight: 500; white-space: nowrap; color: var(--c-text); text-decoration: none; transition: all .2s;">Collection</a>
+    <a href="#why" data-navlink="1" style="padding: 9px 16px; border-radius: var(--r-ui); background: transparent; border: 1px solid transparent; font-family: 'Archivo', sans-serif; font-size: 14.5px; font-weight: 500; white-space: nowrap; color: #9C9C9E; text-decoration: none; transition: all .2s;">Why Us</a>
+    <a href="#reviews" data-navlink="1" style="padding: 9px 16px; border-radius: var(--r-ui); background: transparent; border: 1px solid transparent; font-family: 'Archivo', sans-serif; font-size: 14.5px; font-weight: 500; white-space: nowrap; color: #9C9C9E; text-decoration: none; transition: all .2s;">Reviews</a>
+    <a href="#contact" style="padding: 9px 22px; border-radius: var(--r-ui); background: #E8410E; color: #fff; text-decoration: none; font-family: 'Archivo', sans-serif; font-size: 14.5px; font-weight: 600; white-space: nowrap; transition: all .2s;" style-hover="background: #FF5A26; transform: translateY(-1px);">Contact</a>
+    <button onClick="{{ onToggleTheme }}" title="Toggle theme" aria-label="Toggle theme" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex-shrink: 0; margin-left: 2px; border-radius: var(--r-ui); background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); color: #E4E2DD; cursor: pointer; transition: all .2s;" style-hover="background: rgba(255,255,255,0.14);">
+      <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </sc-if>
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>
+      </sc-if>
+    </button>
+  </nav>
+
+  <!-- device-mode scroll layer: in a bounded frame THIS scrolls, while the nav (its sibling) stays pinned -->
+  <div id="ahc-scroll" class="ahc-scroll">
+
+  <!-- ===== SCROLL CONTENT (opaque layer that lifts to reveal the footer) ===== -->
+  <div id="ahc-content" class="ahc-content" style="position: relative; z-index: 2; background: var(--c-bg); container-type: inline-size; container-name: page;">
+
+  <!-- ===== HERO (cinematic viewfinder) ===== -->
+  <section id="top" data-screen-label="Hero" style="position: relative; height: 100vh; min-height: 660px; overflow: hidden; background: var(--c-bg);">
+    <!-- full-bleed hero film slot (slow zoom) -->
+    <div style="position: absolute; inset: 0; z-index: 0; transform: scale(1.05); animation: ahcZoom 28s ease-in-out infinite alternate;">
+      <div style="position: absolute; inset: 0; background: radial-gradient(82% 70% at 50% 42%, #21201C 0%, #131211 50%, #070707 100%);"></div>
+      <div id="ahc-hero-bg-photo" style="position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .5s ease;"></div>
+      <div id="ahc-hero-bg-label" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+        <span style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.3em; color: rgba(255,255,255,0.11); white-space: nowrap;">[ FULL-BLEED HERO FILM — SHOWROOM ]</span>
+      </div>
+    </div>
+    <!-- film grain -->
+    <div style="position: absolute; inset: 0; z-index: 1; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.014) 0 1px, transparent 1px 16px); pointer-events: none;"></div>
+    <!-- vignette / legibility veil -->
+    <div style="position: absolute; inset: 0; z-index: 2; background: radial-gradient(120% 100% at 50% 48%, rgba(6,6,7,0.18) 18%, rgba(6,6,7,0.72) 100%), linear-gradient(180deg, rgba(6,6,7,0.72) 0%, rgba(6,6,7,0.32) 40%, rgba(6,6,7,0.74) 100%); pointer-events: none;"></div>
+
+    <!-- CONTENT -->
+    <div class="ahc-hero-content" style="position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 30px clamp(20px,3cqi,40px) 28px;">
+
+      <!-- TOP BAR -->
+      <div class="ahc-hero-topbar" style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+        <!-- identity -->
+        <div style="display: flex; align-items: center; gap: 24px; animation: ahcInUp .8s cubic-bezier(.2,.7,.2,1) .05s both;">
+          <a href="#top" style="display: flex; align-items: center; gap: 13px; text-decoration: none;">
+            <span style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex-shrink: 0;"><img src="assets/ahnoud-mark-light.svg" alt="Ahnoud Cars" style="width: 34px; height: 34px; object-fit: contain;"></span>
+            <span style="display: flex; flex-direction: column; line-height: 1.15;">
+              <span style="font-weight: 800; font-size: 14px; letter-spacing: 0.16em; color: #F2F0EC; white-space: nowrap;">AHNOUD CARS</span>
+              <span style="font-family: var(--ahc-mono); font-size: 9px; letter-spacing: 0.26em; color: #C4C2BC; text-shadow: 0 1px 6px rgba(0,0,0,0.7); margin-top: 4px; white-space: nowrap;">EST. 2021 · DUBAI</span>
+            </span>
+          </a>
+          <div class="ahc-hero-creds" style="display: flex; flex-direction: column; gap: 3px; font-family: var(--ahc-mono); font-size: 9px; letter-spacing: 0.22em; color: #C4C2BC; text-shadow: 0 1px 6px rgba(0,0,0,0.7); padding-left: 22px; border-left: 1px solid var(--c-line3);">
+            <span>INSPECTED</span><span>DOCUMENTED</span><span>DELIVERED</span>
+          </div>
+        </div>
+        <span class="ahc-hero-showroom" style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.2em; color: #C9C7C2; text-shadow: 0 1px 6px rgba(0,0,0,0.7); display: flex; align-items: center; gap: 8px; white-space: nowrap; animation: ahcInUp .8s cubic-bezier(.2,.7,.2,1) .05s both;"><span style="width: 6px; height: 6px; border-radius: 50%; background: #E8410E; box-shadow: 0 0 10px rgba(232,65,14,0.7);"></span>SHOWROOM</span>
+      </div>
+
+      <!-- CENTER: split headline + viewfinder -->
+      <div class="ahc-hero-center" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0;">
+        <!-- left word -->
+        <div class="ahc-hero-side" style="flex: 1; text-align: right; padding-right: clamp(28px,4cqi,72px); position: relative; z-index: 6; pointer-events: none; animation: ahcInL 1s cubic-bezier(.16,.84,.34,1) .35s both;">
+          <span style="display: inline-block; font-size: clamp(30px,5cqi,80px); font-weight: 800; letter-spacing: -0.03em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 0.9; color: #F4F2EE; text-shadow: 0 6px 44px rgba(0,0,0,0.6); margin-right: 0;">The&nbsp;car</span>
+        </div>
+        <!-- viewfinder column -->
+        <div class="ahc-hero-frame" style="flex-shrink: 0; width: clamp(270px,29cqi,460px); animation: ahcFrameIn 1s cubic-bezier(.2,.7,.2,1) .2s both;">
+          <!-- top labels -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #D8D6D1; text-shadow: 0 1px 6px rgba(0,0,0,0.7);">
+            <span style="display: flex; align-items: center; gap: 9px;">01 — Spotlight
+              <span style="display: flex; gap: 6px;">
+                <span id="ahc-spot-prev" style="width: 17px; height: 17px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #E4E2DD; cursor: pointer; transition: all .2s;" style-hover="border-color: #E8410E; color: #E8410E;">‹</span>
+                <span id="ahc-spot-next" style="width: 17px; height: 17px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #E4E2DD; cursor: pointer; transition: all .2s;" style-hover="border-color: #E8410E; color: #E8410E;">›</span>
+              </span>
+            </span>
+            <span style="color: #D6D4CF; text-shadow: 0 1px 6px rgba(0,0,0,0.7);">New &amp; Pre-Owned</span>
+          </div>
+          <!-- frame -->
+          <div style="position: relative; width: 100%; height: clamp(290px,44vh,420px); border: 1px solid rgba(255,255,255,0.18); overflow: hidden;">
+            <!-- cropped image -->
+            <div style="position: absolute; inset: 0; background: radial-gradient(90% 80% at 50% 45%, #2A2820 0%, #14130F 55%, #0A0A08 100%); transform: scale(1.08); animation: ahcPan 30s ease-in-out infinite alternate;"></div>
+            <div id="ahc-hero-spot-photo" style="position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .5s ease;"></div>
+            <div style="position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 13px);"></div>
+            <div id="ahc-hero-spot-label" style="position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center;"><span style="font-family: var(--ahc-mono); font-size: 9px; letter-spacing: 0.22em; color: rgba(255,255,255,0.24); text-align: center; padding: 0 16px 18px;">911 CARRERA S — CROP</span></div>
+            <!-- corner brackets -->
+            <div style="position: absolute; top: 8px; left: 8px; width: 18px; height: 18px; border-top: 1.5px solid #F2F0EC; border-left: 1.5px solid #F2F0EC;"></div>
+            <div style="position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-top: 1.5px solid #F2F0EC; border-right: 1.5px solid #F2F0EC;"></div>
+            <div style="position: absolute; bottom: 8px; left: 8px; width: 18px; height: 18px; border-bottom: 1.5px solid #F2F0EC; border-left: 1.5px solid #F2F0EC;"></div>
+            <div style="position: absolute; bottom: 8px; right: 8px; width: 18px; height: 18px; border-bottom: 1.5px solid #F2F0EC; border-right: 1.5px solid #F2F0EC;"></div>
+            <!-- left ruler ticks -->
+            <div style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 22px;">
+              <span style="width: 9px; height: 1px; background: rgba(255,255,255,0.45);"></span>
+              <span style="width: 15px; height: 1px; background: rgba(255,255,255,0.72);"></span>
+              <span style="width: 9px; height: 1px; background: rgba(255,255,255,0.45);"></span>
+            </div>
+            <!-- crosshair reticle -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: ahcPulse 2.6s ease-in-out infinite;">
+              <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 28px; height: 1px; background: rgba(255,255,255,0.6);"></span>
+              <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 1px; height: 28px; background: rgba(255,255,255,0.6);"></span>
+              <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 14px; height: 14px; border: 1px solid rgba(255,255,255,0.5); border-radius: 50%;"></span>
+            </div>
+          </div>
+          <!-- bottom label -->
+          <div style="display: flex; align-items: center; gap: 12px; margin-top: 13px; font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #B6B4AF;">
+            <span id="ahc-spot-idx" style="color: #8C8A86;">01.</span>
+            <span id="ahc-spot-name" style="flex: 1; text-align: center; color: #D6D4CF;">Porsche 911 Carrera S — GT Silver</span>
+            <span style="color: #E8410E;">.23</span>
+          </div>
+          <div id="ahc-spot-dots" style="display: flex; justify-content: center; gap: 7px; margin-top: 12px;"></div>
+        </div>
+        <!-- right word -->
+        <div class="ahc-hero-side" style="flex: 1; text-align: left; padding-left: clamp(28px,4cqi,72px); position: relative; z-index: 6; pointer-events: none; animation: ahcInR 1s cubic-bezier(.16,.84,.34,1) .45s both;">
+          <span style="display: inline-block; font-size: clamp(30px,5cqi,80px); font-weight: 800; letter-spacing: -0.03em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 0.9; color: #F4F2EE; text-shadow: 0 6px 44px rgba(0,0,0,0.6); margin-left: 0;">you&nbsp;wanted</span>
+        </div>
+      </div>
+
+      <!-- BOTTOM BAR -->
+      <div class="ahc-hero-bottombar" style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; animation: ahcInUp .8s cubic-bezier(.2,.7,.2,1) .55s both;">
+        <!-- left -->
+        <div style="display: flex; align-items: flex-end; gap: 36px; font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;">
+          <span style="color: #6E6C68;">© 2026</span>
+          <span style="color: #6E6C68;"><a href="#collection" style="color: #F2F0EC; text-decoration: none;">Grid</a></span>
+        </div>
+        <!-- right -->
+        <div style="display: flex; align-items: flex-end; gap: clamp(20px,3cqi,44px);">
+          <!-- timecode -->
+          <div style="text-align: right; font-family: var(--ahc-mono);">
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #E8410E; animation: ahcPulse 1.4s ease-in-out infinite;"></span>
+              <span style="font-size: 14px; letter-spacing: 0.1em; color: #F2F0EC;">{{ timecode }}</span>
+            </div>
+            <div style="font-size: 9.5px; letter-spacing: 0.18em; color: #6E6C68; margin-top: 7px;">SHEIKH ZAYED RD · DUBAI</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== STATS BAND ===== -->
+  <div data-reveal-group class="ahc-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); background: #E8410E; border-top: 1px solid var(--c-line);">
+    <div style="padding: 60px 52px; border-right: 1px solid rgba(0,0,0,0.14); border-bottom: 1px solid rgba(0,0,0,0.14);">
+      <div style="font-size: 60px; font-weight: 700; letter-spacing: -0.02em; color: #FFFFFF; display: inline-block; transform-origin: left bottom; transition: transform .4s cubic-bezier(.2,.7,.2,1), text-shadow .4s ease;" style-hover="transform: translateY(-5px) scale(1.07); text-shadow: 0 14px 34px rgba(0,0,0,0.32);">120<span style="color: rgba(255,255,255,0.65);">+</span></div>
+      <div style="font-family: var(--ahc-mono); font-size: 13px; letter-spacing: 0.2em; color: rgba(255,255,255,0.82); text-transform: uppercase; margin-top: 16px;">Cars in stock</div>
+    </div>
+    <div style="padding: 60px 52px; border-right: 1px solid rgba(0,0,0,0.14); border-bottom: 1px solid rgba(0,0,0,0.14);">
+      <div style="font-size: 60px; font-weight: 700; letter-spacing: -0.02em; color: #FFFFFF; display: inline-block; transform-origin: left bottom; transition: transform .4s cubic-bezier(.2,.7,.2,1), text-shadow .4s ease;" style-hover="transform: translateY(-5px) scale(1.07); text-shadow: 0 14px 34px rgba(0,0,0,0.32);">14</div>
+      <div style="font-family: var(--ahc-mono); font-size: 13px; letter-spacing: 0.2em; color: rgba(255,255,255,0.82); text-transform: uppercase; margin-top: 16px;">Years trading</div>
+    </div>
+    <div style="padding: 60px 52px; border-right: 1px solid rgba(0,0,0,0.14); border-bottom: 1px solid rgba(0,0,0,0.14);">
+      <div style="font-size: 60px; font-weight: 700; letter-spacing: -0.02em; color: #FFFFFF; display: inline-block; transform-origin: left bottom; transition: transform .4s cubic-bezier(.2,.7,.2,1), text-shadow .4s ease;" style-hover="transform: translateY(-5px) scale(1.07); text-shadow: 0 14px 34px rgba(0,0,0,0.32);">200<span style="color: rgba(255,255,255,0.65);">pt</span></div>
+      <div style="font-family: var(--ahc-mono); font-size: 13px; letter-spacing: 0.2em; color: rgba(255,255,255,0.82); text-transform: uppercase; margin-top: 16px;">Inspection</div>
+    </div>
+    <div style="padding: 60px 52px; border-bottom: 1px solid rgba(0,0,0,0.14);">
+      <div style="font-size: 60px; font-weight: 700; letter-spacing: -0.02em; color: #FFFFFF; display: inline-block; transform-origin: left bottom; transition: transform .4s cubic-bezier(.2,.7,.2,1), text-shadow .4s ease;" style-hover="transform: translateY(-5px) scale(1.07); text-shadow: 0 14px 34px rgba(0,0,0,0.32);">4.9</div>
+      <div style="font-family: var(--ahc-mono); font-size: 13px; letter-spacing: 0.2em; color: rgba(255,255,255,0.82); text-transform: uppercase; margin-top: 16px;">Google rating</div>
+    </div>
+  </div>
+
+  <!-- ===== GALLERY (cards: ProductCard pattern — hover zoom + save) ===== -->
+  <section id="collection" class="ahc-section" style="scroll-margin-top: 72px; padding: 124px clamp(40px,6cqi,88px) 72px; border-top: 1px solid rgba(255,255,255,0.07);">
+    <div data-reveal style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 24px; margin-bottom: 56px;">
+      <div>
+        <div style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.28em; color: #E8410E; margin-bottom: 18px;">02 — THE COLLECTION</div>
+        <h2 style="margin: 0; font-size: clamp(36px, 5cqi, 64px); font-weight: 800; letter-spacing: -0.02em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 0.96;">Every car, in the open.</h2>
+      </div>
+      <p style="max-width: 340px; margin: 0; font-size: 15px; line-height: 1.55; color: #8C8C8E;">Filter by make, body, and budget. Each listing is the same template, pulled live — so the lot you see is the lot we have.</p>
+    </div>
+
+    <!-- filter bar -->
+    <div data-reveal style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 44px;">
+      <sc-for list="{{ filterGroups }}" as="g" hint-placeholder-count="3">
+        <div style="position: relative;">
+          <!-- pill -->
+          <button onClick="{{ g.onToggleOpen }}" style="display: inline-flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--c-input); border: 1px solid {{ g.pillBorder }}; border-radius: 999px; color: var(--c-text); cursor: pointer; font-family: var(--ahc-mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; transition: border-color .2s;">
+            {{ g.label }}
+            <sc-if value="{{ g.hasCount }}" hint-placeholder-val="{{ false }}">
+              <span style="display: inline-flex; align-items: center; justify-content: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #E8410E; color: #fff; font-size: 11px; letter-spacing: 0;">{{ g.count }}</span>
+            </sc-if>
+            <span style="font-size: 8px; color: #8C8A86;">{{ g.chevron }}</span>
+          </button>
+          <!-- dropdown -->
+          <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; min-width: 230px; background: var(--c-input); border: 1px solid var(--c-line3); border-radius: var(--r-card); box-shadow: 0 24px 60px -16px rgba(0,0,0,0.8); padding: 16px; animation: ahcFade .18s ease both;">
+              <div style="font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 12px;">Select {{ g.label }}</div>
+              <div style="display: flex; flex-direction: column; gap: 4px;">
+                <sc-for list="{{ g.options }}" as="o" hint-placeholder-count="4">
+                  <button onClick="{{ o.onToggle }}" style="display: flex; align-items: center; gap: 12px; padding: 8px 8px; background: none; border: none; cursor: pointer; text-align: left; border-radius: var(--r-ui); transition: background .15s;" style-hover="background: rgba(255,255,255,0.05);">
+                    <span style="flex-shrink: 0; width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid {{ o.boxBorder }}; background: {{ o.boxBg }}; display: flex; align-items: center; justify-content: center; transition: all .15s;">
+                      <sc-if value="{{ o.checked }}" hint-placeholder-val="{{ false }}">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                      </sc-if>
+                    </span>
+                    <span style="font-size: 14.5px; color: #E4E4E2;">{{ o.value }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <div style="display: flex; align-items: center; gap: 16px; margin-left: auto; padding-left: 8px;">
+        <span style="font-family: var(--ahc-mono); font-size: 12px; letter-spacing: 0.1em; color: #8C8C8E;">{{ resultCount }} results</span>
+        <sc-if value="{{ hasActiveFilters }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ onReset }}" style="background: none; border: none; cursor: pointer; font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6E70; padding: 0; transition: color .2s;" style-hover="color: #E8410E;">Reset ✕</button>
+        </sc-if>
+      </div>
+    </div>
+
+    <!-- grid -->
+    <div data-reveal-group class="ahc-grid-3" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px;">
+      <sc-for list="{{ visibleCars }}" as="car" hint-placeholder-count="8">
+        <div style="position: relative; padding-bottom: 22px;">
+          <!-- status banner peeking under the card -->
+          <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 46px; border-radius: 0 0 var(--r-card) var(--r-card); background: {{ car.bannerBg }}; box-shadow: 0 9px 26px -3px {{ car.bannerGlow }}; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; z-index: 0;">
+            <span style="display: inline-flex; align-items: center; gap: 8px; font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500; color: {{ car.bannerText }};"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ car.bannerText }}; opacity: 0.85;"></span>{{ car.bannerLabel }}</span>
+          </div>
+        <div onClick="{{ car.onClick }}" onMouseEnter="{{ car.onEnter }}" onMouseLeave="{{ car.onLeave }}" class="ahc-card" style="position: relative; z-index: 1; cursor: pointer; aspect-ratio: 31 / 41; border: 1px solid var(--c-line2); border-radius: var(--r-card); background: #0E0E11; overflow: hidden; display: flex; flex-direction: column; transition: border-color .25s, transform .25s, box-shadow .25s;" style-hover="border-color: rgba(255,255,255,0.22); transform: translateY(-4px); box-shadow: 0 14px 30px -20px rgba(0,0,0,0.6);">
+
+          <!-- full-bleed photo -->
+          <div style="position: relative; flex: 1 1 0; min-height: 0; overflow: hidden;">
+            <image-slot id="{{ car.slotId }}" src="{{ car.photoUrl }}" class="ahc-photo" style="width: 100%; height: 100%; display: block;" shape="rect" placeholder="{{ car.slotPlaceholder }}"></image-slot>
+            <!-- legibility gradient into the info panel -->
+            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,6,8,0) 55%, rgba(6,6,8,0.55) 100%); pointer-events: none;"></div>
+          </div>
+
+          <!-- info panel -->
+          <div style="flex: 0 0 auto; background: #0E0E11; padding: 16px 18px 16px;">
+            <!-- title + price -->
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+              <h3 style="margin: 0; min-width: 0; font-family: var(--ahc-serif, 'Newsreader'), Georgia, serif; font-size: clamp(18px, 2.5cqi, 23px); font-weight: 400; letter-spacing: -0.01em; line-height: 1.12; height: 2.24em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ car.makeModel }}</h3>
+              <span style="flex-shrink: 0; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: #E8410E; white-space: nowrap;">{{ car.price }}</span>
+            </div>
+            <!-- secondary line -->
+            <div style="margin-top: 6px; font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.06em; color: #8C8A86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ car.cardSub }}</div>
+            <!-- 3-stat row -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--c-line2);">
+              <div style="display: flex; align-items: center; gap: 7px; padding-right: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C7A74" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                <span style="font-family: var(--ahc-mono); font-size: 11px; color: #D4D2CC; white-space: nowrap;">{{ car.sYear }}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 7px; padding: 0 8px; border-left: 1px solid var(--c-line2);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C7A74" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14l3-3"></path><path d="M3.3 16a9 9 0 1 1 17.4 0"></path><path d="M2 16h3M19 16h3"></path></svg>
+                <span style="font-family: var(--ahc-mono); font-size: 11px; color: #D4D2CC; white-space: nowrap;">{{ car.sMileage }}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 7px; padding-left: 8px; border-left: 1px solid var(--c-line2);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C7A74" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4.5 13H11l-1 9 8.5-11H12z"></path></svg>
+                <span style="font-family: var(--ahc-mono); font-size: 11px; color: #D4D2CC; white-space: nowrap;">{{ car.sPower }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ showLoadMore }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; justify-content: center; margin-top: 44px;">
+        <button onClick="{{ onLoadMore }}" style="display: inline-flex; align-items: center; gap: 12px; padding: 16px 36px; background: none; border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-ui); color: var(--c-text); cursor: pointer; font-family: var(--ahc-mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; transition: all .2s;" style-hover="border-color: #E8410E; color: #E8410E;">Load more <span style="font-size: 14px;">↓</span></button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align: center; padding: 80px 20px; font-family: var(--ahc-mono); color: #6E6E70; font-size: 13px; letter-spacing: 0.1em;">NO CARS MATCH THESE FILTERS — <span onClick="{{ onReset }}" style="color: #E8410E; cursor: pointer;">RESET</span></div>
+    </sc-if>
+  </section>
+
+  <!-- ===== WHY ===== -->
+  <section id="why" class="ahc-section ahc-why" style="scroll-margin-top: 72px; padding: 140px clamp(40px,6cqi,88px); border-top: 1px solid rgba(255,255,255,0.07); margin-top: 80px;">
+    <div style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.28em; color: #E8410E; margin-bottom: 18px;">03 — WHY AHNOUD CARS</div>
+    <h2 data-reveal style="margin: 0 0 76px; font-size: clamp(34px, 4.5cqi, 58px); font-weight: 800; letter-spacing: -0.02em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 0.98; max-width: 760px;">Buying a car should be the easy part.</h2>
+    <div data-reveal-group class="ahc-why-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; border-top: 1px solid var(--c-line2);">
+      <sc-for list="{{ trust }}" as="t" hint-placeholder-count="4">
+        <div style="padding: 44px 36px 48px 0; border-right: 1px solid rgba(255,255,255,0.07);">
+          <div style="font-family: var(--ahc-mono); font-size: 12px; color: #E8410E; margin-bottom: 28px;">{{ t.no }}</div>
+          <h3 style="margin: 0 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em;">{{ t.title }}</h3>
+          <p style="margin: 0; font-size: 14.5px; line-height: 1.6; color: #8C8C8E;">{{ t.desc }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ===== TESTIMONIALS ===== -->
+  <section id="reviews" class="ahc-section" style="scroll-margin-top: 72px; padding: 130px clamp(40px,6cqi,88px); border-top: 1px solid rgba(255,255,255,0.07); background: var(--c-modal);">
+    <div data-reveal style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin-bottom: 64px;">
+      <div>
+        <div style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.28em; color: #E8410E; margin-bottom: 18px;">04 — WHAT THEY SAY</div>
+        <h2 style="margin: 0; font-size: clamp(34px, 4.5cqi, 58px); font-weight: 800; letter-spacing: -0.02em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 0.98;">From the driveway.</h2>
+      </div>
+      <div class="ahc-mono-rating" style="font-family: var(--ahc-mono); font-size: 12px; letter-spacing: 0.1em; color: #8C8C8E;">4.9 / 5.0 · 280+ REVIEWS</div>
+    </div>
+    <div data-reveal-group style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 26px;">
+      <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+        <div class="ahc-review" style="border: 1px solid rgba(232,65,14,0.28); border-radius: var(--r-card); padding: 38px 32px; background: linear-gradient(155deg, rgba(232,65,14,0.16) 0%, rgba(232,65,14,0.05) 60%, rgba(232,65,14,0.02) 100%); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 22px;">
+          <div style="font-family: var(--ahc-mono); font-size: 20px; color: #E8410E; letter-spacing: 0.18em; text-align: center;">★★★★★</div>
+          <p style="margin: 0; font-size: 17px; line-height: 1.55; color: #E4E4E2; font-weight: 500; letter-spacing: -0.01em;">"{{ r.quote }}"</p>
+          <div style="display: flex; align-items: center; gap: 13px; margin-top: auto; padding-top: 8px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 8px), #18181B; display: flex; align-items: center; justify-content: center; font-family: var(--ahc-mono); font-size: 12px; color: #9A9A9E; border: 1px solid var(--c-line);">{{ r.initials }}</div>
+            <div>
+              <div style="font-size: 14px; font-weight: 600;">{{ r.name }}</div>
+              <div style="font-family: var(--ahc-mono); font-size: 10.5px; letter-spacing: 0.08em; color: #6E6E70; margin-top: 3px;">{{ r.bought }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section id="contact" class="ahc-section" style="scroll-margin-top: 72px; padding: 140px clamp(40px,6cqi,88px); border-top: 1px solid rgba(255,255,255,0.07);">
+    <div data-reveal class="ahc-contact" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); border: 1px solid var(--c-line2); border-radius: var(--r-card); overflow: hidden; background: #0D0D0F;">
+
+      <!-- LEFT: form -->
+      <div style="padding: clamp(40px,4cqi,56px) clamp(32px,3.4cqi,52px); position: relative;">
+        <sc-if value="{{ sent }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0D0D0F; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; z-index: 4; animation: ahcFade .4s both;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; border: 1px solid #E8410E; display: flex; align-items: center; justify-content: center; color: #E8410E; font-size: 26px; margin-bottom: 24px;">✓</div>
+            <h3 style="margin: 0 0 10px; font-size: 24px; font-weight: 700;">Enquiry received.</h3>
+            <p style="margin: 0 0 28px; font-size: 15px; color: #9A9A9E; max-width: 320px; line-height: 1.5;">{{ sentMsg }}</p>
+            <button onClick="{{ onResetForm }}" style="background: none; border: 1px solid rgba(255,255,255,0.16); color: var(--c-text); padding: 13px 26px; border-radius: var(--r-ui); cursor: pointer; font-family: var(--ahc-mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase;">Send another</button>
+          </div>
+        </sc-if>
+
+        <div style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.28em; color: #E8410E; margin-bottom: 18px;">05 — GET IN TOUCH</div>
+        <h2 style="margin: 0 0 16px; font-size: clamp(32px, 3.6cqi, 48px); font-weight: 800; letter-spacing: -0.02em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 1;">Come see it in person.</h2>
+        <p style="margin: 0 0 36px; max-width: 440px; font-size: 15.5px; line-height: 1.55; color: #9A9A9E;">Tell us which car caught your eye and we'll have it ready. Walk-ins welcome, test drives encouraged.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <!-- first + last name -->
+          <div class="ahc-namegrid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <label style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">First name</label>
+              <input value="{{ formFirstName }}" onInput="{{ onFirstName }}" placeholder="Khalid" style="background: var(--c-input); border: 1px solid var(--c-line3); border-radius: var(--r-ui); padding: 14px 16px; color: var(--c-text); font-family: 'Archivo', sans-serif; font-size: 15px; outline: none;" style-focus="border-color: #E8410E;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <label style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Last name</label>
+              <input value="{{ formLastName }}" onInput="{{ onLastName }}" placeholder="Al Mansoori" style="background: var(--c-input); border: 1px solid var(--c-line3); border-radius: var(--r-ui); padding: 14px 16px; color: var(--c-text); font-family: 'Archivo', sans-serif; font-size: 15px; outline: none;" style-focus="border-color: #E8410E;">
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <label style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Phone</label>
+            <input value="{{ formPhone }}" onInput="{{ onPhone }}" placeholder="+971 5X XXX XXXX" style="background: var(--c-input); border: 1px solid var(--c-line3); border-radius: var(--r-ui); padding: 14px 16px; color: var(--c-text); font-family: 'Archivo', sans-serif; font-size: 15px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <label style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Car of interest</label>
+            <input value="{{ contactCar }}" onInput="{{ onContactCar }}" placeholder="Any car in the collection" style="background: var(--c-input); border: 1px solid {{ carFieldBorder }}; border-radius: var(--r-ui); padding: 14px 16px; color: var(--c-text); font-family: 'Archivo', sans-serif; font-size: 15px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <label style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Message</label>
+            <textarea value="{{ formMessage }}" onInput="{{ onMessage }}" placeholder="When would you like to come by?" rows="3" style="background: var(--c-input); border: 1px solid var(--c-line3); border-radius: var(--r-ui); padding: 14px 16px; color: var(--c-text); font-family: 'Archivo', sans-serif; font-size: 15px; outline: none; resize: vertical;" style-focus="border-color: #E8410E;"></textarea>
+          </div>
+          <button onClick="{{ onSubmit }}" style="margin-top: 6px; padding: 17px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: var(--ahc-mono); font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">Send enquiry →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: map -->
+      <div class="ahc-contact-map" style="position: relative; min-height: 560px; border-left: 1px solid var(--c-line); background: repeating-linear-gradient(135deg, rgba(255,255,255,0.022) 0 1px, transparent 1px 18px), radial-gradient(120% 90% at 70% 30%, #15140F 0%, #0E0E10 60%, #0A0A0B 100%); overflow: hidden;">
+        <!-- faux street grid -->
+        <div style="position: absolute; inset: 0; background:
+          repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 84px),
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 96px);"></div>
+        <!-- highlighted road -->
+        <div style="position: absolute; left: -10%; top: 38%; width: 120%; height: 12px; background: rgba(232,65,14,0.22); transform: rotate(-9deg); border-top: 1px solid rgba(232,65,14,0.5); border-bottom: 1px solid rgba(232,65,14,0.5);"></div>
+        <!-- logo top-right -->
+        <div style="position: absolute; top: 22px; right: 22px; z-index: 3; display: flex; align-items: center; gap: 9px; padding: 9px 14px 9px 11px; background: rgba(12,12,14,0.6); border: 1px solid var(--c-line3); border-radius: 999px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+          <img src="assets/ahnoud-mark-light.svg" alt="" style="width: 18px; height: 18px; object-fit: contain;">
+          <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #D6D4CF;">Showroom</span>
+        </div>
+        <!-- pin -->
+        <div style="position: absolute; top: 42%; left: 50%; transform: translate(-50%,-100%); z-index: 3; display: flex; flex-direction: column; align-items: center;">
+          <div style="font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.14em; color: #F2F0EC; background: rgba(10,10,11,0.75); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--r-ui); padding: 6px 10px; white-space: nowrap; margin-bottom: 8px;">AHNOUD CARS</div>
+          <div style="width: 16px; height: 16px; border-radius: 50%; background: #E8410E; box-shadow: 0 0 0 6px rgba(232,65,14,0.22), 0 8px 18px rgba(0,0,0,0.6);"></div>
+        </div>
+        <!-- bottom overlay: address + maps link -->
+        <div style="position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, transparent 45%, rgba(8,8,9,0.55) 72%, rgba(8,8,9,0.92) 100%); pointer-events: none;"></div>
+        <div style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; padding: clamp(28px,3cqi,40px) clamp(28px,3cqi,40px) clamp(28px,3cqi,36px);">
+          <div style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #8C8A86; margin-bottom: 14px;">Find us</div>
+          <div style="font-size: clamp(20px,2cqi,26px); font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 22px;">Sheikh Zayed Road<br>Dubai, U.A.E.</div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px;">
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Phone</span>
+              <span style="font-size: 15px; font-weight: 600;">+971 4 555 0192</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70;">Email</span>
+              <span style="font-size: 15px; font-weight: 600;">sales@ahnoudcars.com</span>
+            </div>
+            <a href="https://maps.google.com/?q=Sheikh+Zayed+Road+Dubai" target="_blank" rel="noopener" style="margin-left: auto; display: inline-flex; align-items: center; gap: 9px; font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #F2F0EC; text-decoration: none; padding: 11px 18px; border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; transition: all .2s;" style-hover="border-color: #E8410E; color: #E8410E;">Open in Maps →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  </div><!-- /#ahc-content -->
+
+  <!-- reveal spacer: reserves scroll length equal to the footer height (synced in JS) -->
+  <div id="ahc-footer-spacer" style="height: 720px;" aria-hidden="true"></div>
+
+  <!-- ===== FOOTER (scroll reveal — pinned behind the content above) ===== -->
+  <footer id="ahc-footer" data-screen-label="Footer" style="position: fixed; left: 0; right: 0; bottom: 0; z-index: 1; background: #E8410E; color: #1A0E07; overflow: hidden; padding: 54px clamp(24px,4vw,72px) 36px;">
+    <!-- big corner monogram, bleeding off the edge -->
+    <img src="assets/ahnoud-mark-dark.svg" alt="" aria-hidden="true" style="position: absolute; right: clamp(24px,4vw,72px); bottom: 42px; width: clamp(165px,18vw,260px); height: auto; opacity: 0.16; pointer-events: none;">
+
+    <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: clamp(36px,5.5vh,64px);">
+
+      <!-- TOP ROW -->
+      <div class="ahc-footer-top" style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding-bottom: 28px; border-bottom: 1px solid rgba(26,14,7,0.22);">
+        <div style="display: flex; gap: clamp(28px,4vw,56px); font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;">
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <span style="color: rgba(26,14,7,0.5);">Legal</span>
+            <a href="#" style="color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Privacy</a>
+            <a href="#" style="color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Cookies</a>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px;">
+            <span style="color: rgba(26,14,7,0.5);">Info</span>
+            <a href="#" style="color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Terms</a>
+            <a href="#why" style="color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Finance</a>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 22px;">
+          <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(26,14,7,0.55); white-space: nowrap;">© 2026</span>
+          <a href="#top" aria-label="Back to top" style="width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(26,14,7,0.45); display: flex; align-items: center; justify-content: center; color: #1A0E07; text-decoration: none; font-size: 18px; flex-shrink: 0; transition: background .2s, color .2s, transform .2s;" style-hover="background: #1A0E07; color: #E8410E; transform: translateY(-3px);">↑</a>
+        </div>
+      </div>
+
+      <!-- MAIN ROW -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 40px; max-width: 720px;">
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+          <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(26,14,7,0.55);">Contacts</span>
+          <a href="mailto:sales@ahnoudcars.com" style="font-size: clamp(20px,2.4vw,30px); font-weight: 700; letter-spacing: -0.02em; color: #1A0E07; text-decoration: none; border-bottom: 2px solid rgba(26,14,7,0.35); padding-bottom: 4px; width: fit-content; transition: border-color .2s;" style-hover="border-color: #1A0E07;">sales@ahnoudcars.com</a>
+          <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+            <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(26,14,7,0.5);">Phone</span>
+            <span style="font-size: 17px; font-weight: 600;">+971 4 555 0192</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(26,14,7,0.5);">Showroom</span>
+            <span style="font-size: 17px; font-weight: 600;">Sheikh Zayed Rd, Dubai</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(26,14,7,0.55); margin-bottom: 2px;">Navigation</span>
+          <a href="#top" style="font-size: 16px; font-weight: 600; color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Home</a>
+          <a href="#collection" style="font-size: 16px; font-weight: 600; color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Collection</a>
+          <a href="#why" style="font-size: 16px; font-weight: 600; color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Why Us</a>
+          <a href="#reviews" style="font-size: 16px; font-weight: 600; color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Reviews</a>
+          <a href="#contact" style="font-size: 16px; font-weight: 600; color: #1A0E07; text-decoration: none; transition: opacity .2s;" style-hover="opacity: 0.55;">Contact</a>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-top: 6px;">
+        <div style="display: flex; flex-direction: column; gap: 13px;">
+          <span style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(26,14,7,0.55);">Socials</span>
+          <div style="display: flex; gap: 18px; font-family: var(--ahc-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
+            <a href="#" style="color: #1A0E07; text-decoration: none; border-bottom: 1px solid rgba(26,14,7,0.35); padding-bottom: 2px; transition: border-color .2s;" style-hover="border-color: #1A0E07;">Instagram</a>
+            <a href="#" style="color: #1A0E07; text-decoration: none; border-bottom: 1px solid rgba(26,14,7,0.35); padding-bottom: 2px; transition: border-color .2s;" style-hover="border-color: #1A0E07;">WhatsApp</a>
+            <a href="#" style="color: #1A0E07; text-decoration: none; border-bottom: 1px solid rgba(26,14,7,0.35); padding-bottom: 2px; transition: border-color .2s;" style-hover="border-color: #1A0E07;">YouTube</a>
+          </div>
+          <span style="margin-top: 15px; font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(26,14,7,0.55);">© 2026 Ahnoud Cars Trading LLC · Dubai, U.A.E.</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+  </div><!-- /#ahc-scroll -->
+
+  <!-- ===== MODAL ===== -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onClose }}" style="position: fixed; inset: 0; z-index: 100; background: rgba(5,5,6,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px; overflow-y: auto; animation: ahcBackdrop .25s both;" class="ahc-modal-overlay">
+      <div onClick="{{ stop }}" style="width: 100%; max-width: 1080px; background: var(--c-modal); border: 1px solid var(--c-line3); border-radius: var(--r-card); overflow: hidden; animation: ahcPanel .35s cubic-bezier(.2,.7,.2,1) both; margin: auto;">
+        <div class="ahc-modal-grid" style="display: grid; grid-template-columns: 1.25fr 1fr;">
+          <!-- carousel -->
+          <div class="ahc-modal-media" style="position: relative; background: var(--c-bg); border-right: 1px solid var(--c-line); min-height: 440px; display: flex; flex-direction: column;">
+            <div style="position: relative; flex: 1; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 16px), linear-gradient(180deg, #141417 0%, #0B0B0D 100%); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+              <sc-if value="{{ modal.showPhoto }}" hint-placeholder-val="{{ true }}">
+                <div style="position: absolute; inset: 0; background-image: url('{{ modal.photoUrl }}'); background-size: cover; background-position: center;"></div>
+              </sc-if>
+              <sc-if value="{{ modal.showPlaceholder }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.18em; color: rgba(255,255,255,0.32); text-align: center; padding: 0 24px;">{{ modal.activePhoto }}</span>
+              </sc-if>
+              <button onClick="{{ onPrev }}" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.16); background: rgba(10,10,11,0.7); color: var(--c-text); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;" style-hover="border-color: #E8410E; color: #E8410E;">←</button>
+              <button onClick="{{ onNext }}" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.16); background: rgba(10,10,11,0.7); color: var(--c-text); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;" style-hover="border-color: #E8410E; color: #E8410E;">→</button>
+              <div style="position: absolute; top: 16px; left: 16px; font-family: var(--ahc-mono); font-size: 10.5px; letter-spacing: 0.14em; color: #9A9A9E; padding: 6px 10px; background: rgba(10,10,11,0.6); border: 1px solid var(--c-line2); border-radius: var(--r-ui);">{{ modal.photoPos }}</div>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 14px 16px; border-top: 1px solid var(--c-line);">
+              <sc-for list="{{ modal.thumbs }}" as="th" hint-placeholder-count="4">
+                <button onClick="{{ th.onClick }}" style="flex: 1; aspect-ratio: 4/3; border-radius: var(--r-ui); border: 1px solid {{ th.border }}; overflow: hidden; background-image: url('{{ th.thumbUrl }}'); background-size: cover; background-position: center; background-color: #131316; cursor: pointer; font-family: var(--ahc-mono); font-size: 8px; letter-spacing: 0.08em; color: #6E6E70; display: flex; align-items: center; justify-content: center;"><sc-if value="{{ th.notPhoto }}" hint-placeholder-val="{{ true }}">{{ th.label }}</sc-if></button>
+              </sc-for>
+            </div>
+          </div>
+          <!-- spec sheet -->
+          <div style="padding: 32px 32px 36px; display: flex; flex-direction: column; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                  <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ modal.statusColor }};"></span>
+                  <span style="font-family: var(--ahc-mono); font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #9A9A9E;">{{ modal.status }} · {{ modal.condition }}</span>
+                </div>
+                <h3 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-family: var(--ahc-display, 'Archivo'), sans-serif; line-height: 1.05;">{{ modal.makeModel }}</h3>
+              </div>
+              <button onClick="{{ onClose }}" style="flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14); background: none; color: #B4B4B6; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;" style-hover="border-color: #E8410E; color: #E8410E;">✕</button>
+            </div>
+            <div style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-top: 22px; color: #fff;">{{ modal.price }}</div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 26px; border-top: 1px solid var(--c-line2);">
+              <sc-for list="{{ modal.specs }}" as="s" hint-placeholder-count="8">
+                <div style="padding: 14px 16px 14px 0; border-bottom: 1px solid rgba(255,255,255,0.07);">
+                  <div style="font-family: var(--ahc-mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">{{ s.label }}</div>
+                  <div style="font-size: 15px; font-weight: 600; margin-top: 6px;">{{ s.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="margin-top: 26px;">
+              <div style="font-family: var(--ahc-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-bottom: 14px;">Highlights</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ modal.highlights }}" as="h" hint-placeholder-count="3">
+                  <span style="font-family: var(--ahc-mono); font-size: 11px; letter-spacing: 0.04em; color: #D4D4D2; padding: 8px 13px; border: 1px solid var(--c-line3); border-radius: var(--r-ui);">{{ h }}</span>
+                </sc-for>
+              </div>
+            </div>
+
+            <button onClick="{{ modal.onEnquire }}" style="margin-top: 30px; padding: 17px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: var(--ahc-mono); font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 12px; transition: background .2s;" style-hover="background: #FF5A26;">Enquire about this car →</button>
+            <div style="text-align: center; margin-top: 14px; font-family: var(--ahc-mono); font-size: 10.5px; letter-spacing: 0.1em; color: #6E6E70;">{{ modal.stock }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Desktop&quot;,&quot;Tablet&quot;,&quot;Mobile&quot;],&quot;default&quot;:&quot;Desktop&quot;},&quot;cornerStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Sharp&quot;,&quot;Default&quot;,&quot;Rounded&quot;,&quot;Pill&quot;],&quot;default&quot;:&quot;Default&quot;}}">
+class Component extends DCLogic {
+  state = {
+    light: (() => { try { return localStorage.getItem('ahnoud_theme') === 'light'; } catch (e) { return false; } })(),
+    brandSel: [], bodySel: [], priceSel: [], openFilter: null,
+    visible: 8,
+    modalId: null,
+    photoIdx: 0,
+    contactCar: '',
+    form: { firstName: '', lastName: '', phone: '', message: '' },
+    sent: false,
+    sentMsg: '',
+    hoveredId: null,
+    saved: {},
+  };
+
+  CARS = [
+    { id: 1,  make: 'Porsche',       model: '911 Carrera S',       body: 'Coupe', year: 2023, cond: 'Used', price: 545000,  km: 18500, fuel: 'Petrol',   trans: 'Auto (PDK)',  engine: '3.0L Flat-6 TT', power: '444 hp', color: 'GT Silver',     status: 'Available', hl: ['Sport Chrono', 'PASM', 'Bose Surround'] },
+    { id: 2,  make: 'Mercedes-Benz', model: 'G 63 AMG',            body: 'SUV',   year: 2024, cond: 'New',  price: 1150000, km: 0,     fuel: 'Petrol',   trans: 'Auto (9G)',   engine: '4.0L V8 BiTurbo', power: '585 hp', color: 'Obsidian Black', status: 'Available', hl: ['AMG Night Pkg', 'Burmester', '22" Forged'] },
+    { id: 3,  make: 'BMW',           model: 'M5 Competition',      body: 'Sedan', year: 2022, cond: 'Used', price: 385000,  km: 32000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.4L V8 TT',    power: '625 hp', color: 'Marina Bay Blue', status: 'Reserved', hl: ['M Carbon Seats', 'Carbon Roof', "Driver's Pkg"] },
+    { id: 4,  make: 'Land Rover',    model: 'Range Rover Autobiography', body: 'SUV', year: 2024, cond: 'New', price: 920000, km: 0, fuel: 'Hybrid', trans: 'Auto (8-spd)', engine: '4.4L V8', power: '523 hp', color: 'Santorini Black', status: 'Available', hl: ['Executive Rear', 'Meridian 3D', '23" Wheels'] },
+    { id: 5,  make: 'Audi',          model: 'RS Q8',               body: 'SUV',   year: 2023, cond: 'Used', price: 615000,  km: 21000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8 TT',    power: '591 hp', color: 'Daytona Grey',  status: 'Available', hl: ['RS Design', 'Pano Roof', 'B&O 3D'] },
+    { id: 6,  make: 'Lamborghini',   model: 'Urus',                body: 'SUV',   year: 2022, cond: 'Used', price: 1050000, km: 14500, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8 BiTurbo', power: '641 hp', color: 'Giallo Auge', status: 'Available', hl: ['Ad Personam', 'Carbon Pkg', '23" Wheels'] },
+    { id: 7,  make: 'Toyota',        model: 'Land Cruiser 300 VX-R', body: 'SUV', year: 2024, cond: 'New', price: 410000, km: 0, fuel: 'Petrol', trans: 'Auto (10-spd)', engine: '3.5L V6 TT', power: '409 hp', color: 'Pearl White', status: 'Available', hl: ['Multi-Terrain', 'JBL Premium', 'Cool Box'] },
+    { id: 8,  make: 'Bentley',       model: 'Continental GT',      body: 'Coupe', year: 2021, cond: 'Used', price: 780000,  km: 26000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8',       power: '542 hp', color: 'Glacier White', status: 'Reserved', hl: ['Mulliner', 'Naim Audio', 'Rotating Display'] },
+    { id: 9,  make: 'Nissan',        model: 'Patrol Platinum',     body: 'SUV',   year: 2023, cond: 'Used', price: 285000,  km: 38000, fuel: 'Petrol',   trans: 'Auto (7-spd)', engine: '5.6L V8',       power: '400 hp', color: 'Gobi Sand',     status: 'Available', hl: ['Around View', 'BOSE', '2nd Row Captain'] },
+    { id: 10, make: 'Ford',          model: 'Mustang GT',          body: 'Coupe', year: 2022, cond: 'Used', price: 195000,  km: 29500, fuel: 'Petrol',   trans: 'Manual (6-spd)', engine: '5.0L V8',     power: '450 hp', color: 'Race Red',      status: 'Available', hl: ['Active Exhaust', 'Recaro', 'MagneRide'] },
+    { id: 11, make: 'Lexus',         model: 'LX 600 Signature',    body: 'SUV',   year: 2024, cond: 'New',  price: 690000,  km: 0,     fuel: 'Petrol',   trans: 'Auto (10-spd)', engine: '3.5L V6 TT',   power: '409 hp', color: 'Sonic Quartz',  status: 'Available', hl: ['Mark Levinson', 'Rear Ent.', '4-Zone Climate'] },
+    { id: 12, make: 'Tesla',         model: 'Model S Plaid',       body: 'Sedan', year: 2023, cond: 'Used', price: 420000,  km: 16000, fuel: 'Electric', trans: 'Single-speed', engine: 'Tri-Motor',    power: '1020 hp', color: 'Pearl White',  status: 'Sold',      hl: ['Yoke Steering', '1020 hp', 'Premium Connectivity'] },
+  ];
+
+  ANGLES = ['FRONT 3/4', 'PROFILE', 'REAR 3/4', 'INTERIOR'];
+
+  // curated real car photos (Unsplash) per car id — exact model where available, else brand/body match
+  CAR_PHOTOS = {
+    1:  '1614162692292-7ac56d7f7f1e', // Porsche 911 (white)
+    2:  '1553440569-bcc63803a83d',    // Mercedes-AMG GT (G63)
+    3:  '1555215695-3004980ad54e',    // BMW M5
+    4:  '1503376780353-7e6692767b70', // Porsche Panamera (Range Rover)
+    5:  '1517524008697-84bbe3c3fd98', // Audi Q5 SUV (RS Q8)
+    6:  '1511919884226-fd3cad34687c', // Lamborghini (Urus)
+    7:  '1568605117036-5fe5e7bab0b7', // GT-R on road (Land Cruiser)
+    8:  '1542362567-b07e54358753',    // McLaren (Bentley Continental GT)
+    9:  '1552519507-da3b142c6e3d',    // Camaro (Patrol)
+    10: '1494976388531-d1058494cdd8', // Ford Mustang
+    11: '1503736334956-4c8f8e92946d', // Ferrari (Lexus LX)
+    12: '1580273916550-e323be2ae537'  // BMW M4 (Tesla)
+  };
+
+  componentDidMount() {
+    this._applyTheme();
+    this._applyCorners();
+    this._applyHeroImages();
+    this._heroSync = (e) => { if (!e || !e.key || e.key.indexOf('ahnoud_hero') === 0) this._applyHeroImages(); };
+    window.addEventListener('storage', this._heroSync);
+    this._setupHeroSlider();
+    this._clock = setInterval(() => this.forceUpdate(), 1000);
+    this._applyDevice();
+    this._setupReveals();
+    this._setupCursor();
+    this._key = (e) => { if (e.key === 'Escape' && this.state.modalId !== null) this.closeModal(); };
+    window.addEventListener('keydown', this._key);
+
+    // moving highlight pill on the nav (click to move)
+    this._navLinks = Array.from(document.querySelectorAll('#ahc-floating-nav a[data-navlink]'));
+    const setActive = (active) => {
+      this._navLinks.forEach((el) => {
+        const on = el === active;
+        el.style.background = on ? 'rgba(255,255,255,0.07)' : 'transparent';
+        el.style.borderColor = on ? 'rgba(255,255,255,0.14)' : 'transparent';
+        el.style.color = on ? '#F2F2F0' : '#9C9C9E';
+      });
+    };
+    this._navHandlers = this._navLinks.map((el) => {
+      const h = () => setActive(el);
+      el.addEventListener('click', h);
+      el.addEventListener('mouseenter', () => { if (el.style.background === 'transparent') el.style.color = '#F2F2F0'; });
+      el.addEventListener('mouseleave', () => { if (el.style.background === 'transparent') el.style.color = '#9C9C9E'; });
+      return h;
+    });
+
+    // keep the reveal spacer exactly as tall as the fixed footer
+    this._syncFooter = () => {
+      const f = document.getElementById('ahc-footer');
+      const sp = document.getElementById('ahc-footer-spacer');
+      if (f && sp) sp.style.height = f.offsetHeight + 'px';
+    };
+    // hide the floating nav once the footer starts to reveal
+    this._onScroll = () => {
+      const sp = document.getElementById('ahc-footer-spacer');
+      const nav = document.getElementById('ahc-floating-nav');
+      if (!sp || !nav) return;
+      const dev = document.body.classList.contains('ahc-dev');
+      const sc = document.getElementById('ahc-scroll');
+      let sH, sY, ih;
+      if (dev && sc) { sH = sc.scrollHeight; sY = sc.scrollTop; ih = sc.clientHeight; }
+      else { sH = document.documentElement.scrollHeight; sY = window.scrollY; ih = window.innerHeight; }
+      const dist = sH - sY - ih;
+      const atTop = sY < 160;
+      const hide = atTop || dist < (sp.offsetHeight - 60);
+      nav.style.opacity = hide ? '0' : '1';
+      nav.style.pointerEvents = hide ? 'none' : 'auto';
+      nav.style.transform = 'translateX(-50%) translateY(' + (hide ? '24px' : '0px') + ')';
+    };
+    this._syncFooter();
+    this._onScroll();
+    window.addEventListener('resize', this._syncFooter);
+    window.addEventListener('scroll', this._onScroll, { passive: true });
+    const scEl = document.getElementById('ahc-scroll');
+    if (scEl) scEl.addEventListener('scroll', this._onScroll, { passive: true });
+    setTimeout(() => { this._syncFooter(); this._onScroll(); }, 400);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this._key);
+    if (this._clock) clearInterval(this._clock);
+    if (this._heroTimer) clearInterval(this._heroTimer);
+    if (this._heroSync) window.removeEventListener('storage', this._heroSync);
+    if (this._syncFooter) window.removeEventListener('resize', this._syncFooter);
+    if (this._onScroll) {
+      window.removeEventListener('scroll', this._onScroll);
+      const scEl = document.getElementById('ahc-scroll');
+      if (scEl) scEl.removeEventListener('scroll', this._onScroll);
+    }
+    if (this._revealIO) this._revealIO.disconnect();
+    if (this._cursorRAF) cancelAnimationFrame(this._cursorRAF);
+    if (this._cursorMove) window.removeEventListener('mousemove', this._cursorMove);
+    if (this._cursorOver) document.removeEventListener('mouseover', this._cursorOver);
+    if (this._cursorEls) this._cursorEls.forEach((el) => el.remove());
+  }
+
+  // ---- scroll reveal -------------------------------------------------
+  _setupReveals() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { this._revealsOff = true; return; }
+    const ease = 'opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1)';
+    const prep = (el) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = ease;
+      el.style.willChange = 'opacity, transform';
+    };
+    const clear = (el) => {
+      const done = () => {
+        el.style.transition = '';
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.willChange = '';
+        el.removeEventListener('transitionend', done);
+      };
+      el.addEventListener('transitionend', done);
+    };
+    this._revealShow = (el, delay) => {
+      window.setTimeout(() => {
+        el.style.opacity = '1';
+        el.style.transform = 'none';
+        clear(el);
+      }, delay);
+    };
+    this._revealBlocks = Array.from(document.querySelectorAll('[data-reveal], [data-reveal-group]'));
+    this._revealBlocks.forEach((b) => {
+      const items = b.hasAttribute('data-reveal-group') ? Array.from(b.children) : [b];
+      items.forEach(prep);
+    });
+    this._buildRevealIO();
+  }
+  _buildRevealIO() {
+    if (this._revealsOff || !this._revealBlocks) return;
+    if (this._revealIO) this._revealIO.disconnect();
+    const dev = document.body.classList.contains('ahc-dev');
+    const root = dev ? document.getElementById('ahc-scroll') : null;
+    this._revealIO = new IntersectionObserver((entries, io) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const b = e.target;
+        const items = b.hasAttribute('data-reveal-group') ? Array.from(b.children) : [b];
+        items.forEach((it, i) => this._revealShow(it, i * 90));
+        io.unobserve(b);
+        b._revealed = true;
+      });
+    }, { root: root, threshold: 0.12, rootMargin: '0px 0px -7% 0px' });
+    this._revealBlocks.forEach((b) => { if (!b._revealed) this._revealIO.observe(b); });
+  }
+
+  // ---- trailing cursor glow -----------------------------------------
+  _setupCursor() {
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    const ring = document.createElement('div');
+    Object.assign(ring.style, {
+      position: 'fixed', left: '0', top: '0', width: '30px', height: '30px',
+      marginLeft: '-15px', marginTop: '-15px', borderRadius: '50%',
+      border: '1.5px solid rgba(232,65,14,0.75)', pointerEvents: 'none', zIndex: '9998',
+      opacity: '0', transition: 'width .28s cubic-bezier(.2,.7,.2,1), height .28s cubic-bezier(.2,.7,.2,1), margin .28s cubic-bezier(.2,.7,.2,1), background-color .28s, border-color .28s, opacity .4s'
+    });
+    const glow = document.createElement('div');
+    Object.assign(glow.style, {
+      position: 'fixed', left: '0', top: '0', width: '260px', height: '260px',
+      marginLeft: '-130px', marginTop: '-130px', borderRadius: '50%', pointerEvents: 'none', zIndex: '9997',
+      background: 'radial-gradient(circle, rgba(232,65,14,0.13) 0%, rgba(232,65,14,0) 68%)',
+      opacity: '0', transition: 'opacity .5s ease'
+    });
+    document.body.appendChild(glow);
+    document.body.appendChild(ring);
+    this._cursorEls = [ring, glow];
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let rx = mx, ry = my, gx = mx, gy = my;
+    this._cursorMove = (e) => {
+      mx = e.clientX; my = e.clientY;
+      ring.style.opacity = '1'; glow.style.opacity = '1';
+    };
+    window.addEventListener('mousemove', this._cursorMove, { passive: true });
+    window.addEventListener('mouseout', (e) => { if (!e.relatedTarget) { ring.style.opacity = '0'; glow.style.opacity = '0'; } }, { passive: true });
+    const loop = () => {
+      rx += (mx - rx) * 0.2; ry += (my - ry) * 0.2;
+      gx += (mx - gx) * 0.1; gy += (my - gy) * 0.1;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      glow.style.left = gx + 'px'; glow.style.top = gy + 'px';
+      this._cursorRAF = requestAnimationFrame(loop);
+    };
+    loop();
+    const sel = 'a, button, [role="button"], [data-navlink], input, textarea, select, [onclick], .ahc-clickable';
+    this._cursorOver = (e) => {
+      const hit = e.target.closest(sel);
+      if (hit) {
+        ring.style.width = '52px'; ring.style.height = '52px';
+        ring.style.marginLeft = '-26px'; ring.style.marginTop = '-26px';
+        ring.style.backgroundColor = 'rgba(232,65,14,0.1)';
+        ring.style.borderColor = 'rgba(232,65,14,0.9)';
+      } else {
+        ring.style.width = '30px'; ring.style.height = '30px';
+        ring.style.marginLeft = '-15px'; ring.style.marginTop = '-15px';
+        ring.style.backgroundColor = 'transparent';
+        ring.style.borderColor = 'rgba(232,65,14,0.75)';
+      }
+    };
+    document.addEventListener('mouseover', this._cursorOver, { passive: true });
+  }
+
+  fmt(n) { return n.toLocaleString('en-US'); }
+  aed(n) { return 'AED ' + n.toLocaleString('en-US'); }
+  _nowStr() {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+  statusColor(s) { return s === 'Available' ? '#5BD08A' : s === 'Reserved' ? '#E0A33E' : '#6E6E70'; }
+
+  inBand(p, band) {
+    switch (band) {
+      case 'Under 300k': return p < 300000;
+      case '300k – 600k': return p >= 300000 && p < 600000;
+      case '600k – 1M': return p >= 600000 && p < 1000000;
+      case '1M+': return p >= 1000000;
+      default: return true;
+    }
+  }
+
+  toggleFilter(group, value) {
+    this.setState((s) => {
+      const arr = s[group].slice();
+      const i = arr.indexOf(value);
+      if (i >= 0) arr.splice(i, 1); else arr.push(value);
+      return { [group]: arr, visible: 8 };
+    });
+  }
+
+  filtered() {
+    const bs = this.state.brandSel, bo = this.state.bodySel, pr = this.state.priceSel;
+    return this.CARS.filter(c =>
+      (bs.length === 0 || bs.includes(c.make)) &&
+      (bo.length === 0 || bo.includes(c.body)) &&
+      (pr.length === 0 || pr.some(band => this.inBand(c.price, band)))
+    );
+  }
+
+  toggleSave(id) { const s = { ...this.state.saved }; if (s[id]) { delete s[id]; } else { s[id] = true; } this.setState({ saved: s }); }
+
+  openModal(id) { this.setState({ modalId: id, photoIdx: 0 }); document.body.style.overflow = 'hidden'; }
+  closeModal() { this.setState({ modalId: null }); document.body.style.overflow = ''; }
+
+  scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({ top: y, behavior: 'smooth' }); }
+  }
+
+  enquire(car) {
+    const label = car.year + ' ' + car.make + ' ' + car.model;
+    this.setState({ contactCar: label, modalId: null, sent: false });
+    document.body.style.overflow = '';
+    setTimeout(() => this.scrollTo('contact'), 60);
+  }
+
+  submit() {
+    const car = this.state.contactCar ? this.state.contactCar : 'your enquiry';
+    const name = this.state.form.firstName ? this.state.form.firstName : 'there';
+    this.setState({ sent: true, sentMsg: 'Thanks ' + name + " — we'll be in touch about " + car + ' shortly.' });
+  }
+
+  componentDidUpdate() {
+    this._applyTheme();
+    this._applyCorners();
+    this._applyDevice();
+  }
+  _setupHeroSlider() {
+    const ids = [1, 3, 10, 6, 2];
+    const slides = ids.map((id) => {
+      const c = this.CARS.find((x) => x.id === id);
+      return {
+        url: 'https://images.unsplash.com/photo-' + this.CAR_PHOTOS[id] + '?w=1200&q=75&auto=format&fit=crop',
+        name: c.make + ' ' + c.model + ' \u2014 ' + c.color
+      };
+    });
+    this._heroIdx = 0;
+    slides.forEach((s) => { new Image().src = s.url; });
+    const photo = document.getElementById('ahc-hero-spot-photo');
+    const nameEl = document.getElementById('ahc-spot-name');
+    const idxEl = document.getElementById('ahc-spot-idx');
+    const labelEl = document.querySelector('#ahc-hero-spot-label span');
+    const dotsWrap = document.getElementById('ahc-spot-dots');
+    // left-to-right slide: scale 1.06 gives overflow so the translate never reveals an edge gap
+    const SLIDE_TRANSITION = 'opacity .55s ease, transform 1.05s cubic-bezier(.22,.61,.36,1)';
+    const slideIn = (el, url) => {
+      if (!el) return;
+      const reveal = () => {
+        el.style.transition = 'none';
+        el.style.opacity = '0';
+        el.style.backgroundImage = 'url(' + url + ')';
+        el.style.backgroundPosition = 'center';
+        el.style.transform = 'translateX(-6%) scale(1.06)';
+        void el.offsetWidth;
+        el.style.transition = SLIDE_TRANSITION;
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(0%) scale(1.06)';
+      };
+      const img = new Image();
+      img.onload = reveal;
+      img.onerror = reveal;
+      img.src = url;
+      if (img.complete) reveal();
+    };
+    const render = () => {
+      const s = slides[this._heroIdx];
+      slideIn(photo, s.url);
+      if (nameEl) nameEl.textContent = s.name;
+      if (idxEl) idxEl.textContent = String(this._heroIdx + 1).padStart(2, '0') + '.';
+      if (labelEl) labelEl.style.display = 'none';
+      if (dotsWrap) Array.from(dotsWrap.children).forEach((d, i) => {
+        d.style.background = i === this._heroIdx ? '#E8410E' : 'rgba(255,255,255,0.3)';
+        d.style.width = i === this._heroIdx ? '16px' : '6px';
+        d.style.borderRadius = i === this._heroIdx ? '3px' : '50%';
+      });
+    };
+    if (dotsWrap) {
+      dotsWrap.innerHTML = '';
+      slides.forEach((_, i) => {
+        const d = document.createElement('span');
+        d.style.cssText = 'width:6px;height:6px;border-radius:50%;cursor:pointer;transition:background .2s, width .2s;';
+        d.addEventListener('click', () => { this._heroIdx = i; render(); this._heroRestart(); });
+        dotsWrap.appendChild(d);
+      });
+    }
+    this._heroGo = (dir) => { this._heroIdx = (this._heroIdx + dir + slides.length) % slides.length; render(); this._heroRestart(); };
+    this._heroRestart = () => { if (this._heroTimer) clearInterval(this._heroTimer); this._heroTimer = setInterval(() => this._heroGo(1), 5200); };
+    const prev = document.getElementById('ahc-spot-prev'), next = document.getElementById('ahc-spot-next');
+    if (prev) prev.onclick = () => this._heroGo(-1);
+    if (next) next.onclick = () => this._heroGo(1);
+    render();
+    this._heroRestart();
+  }
+  _applyHeroImages() {
+    try {
+      var defaults = {
+        'ahc-hero-bg-photo':   'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=2000&q=75&auto=format&fit=crop',
+        'ahc-hero-spot-photo': 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=1200&q=75&auto=format&fit=crop'
+      };
+      var slots = [
+        { v: localStorage.getItem('ahnoud_hero_bg'),   photo: 'ahc-hero-bg-photo',   label: 'ahc-hero-bg-label' },
+        { v: localStorage.getItem('ahnoud_hero_spot'), photo: 'ahc-hero-spot-photo', label: 'ahc-hero-spot-label' }
+      ];
+      slots.forEach(function (s) {
+        var p = document.getElementById(s.photo);
+        var l = document.getElementById(s.label);
+        var img = s.v ? s.v : defaults[s.photo];
+        if (p) { p.style.backgroundImage = 'url(' + img + ')'; p.style.opacity = '1'; }
+        if (l) l.style.display = 'none';
+      });
+    } catch (e) {}
+  }
+  _applyDevice() {
+    const d = this.props.device || 'Desktop';
+    if (d === this._curDevice) return;
+    this._curDevice = d;
+    const b = document.body;
+    b.classList.remove('ahc-dev', 'ahc-tablet', 'ahc-mobile');
+    if (d === 'Tablet') b.classList.add('ahc-dev', 'ahc-tablet');
+    else if (d === 'Mobile') b.classList.add('ahc-dev', 'ahc-mobile');
+    const sc = document.getElementById('ahc-scroll');
+    if (sc && sc.scrollTo) sc.scrollTo(0, 0);
+    else window.scrollTo(0, 0);
+    // re-aim the scroll-reveal observer + footer math at the active scroller
+    requestAnimationFrame(() => {
+      if (this._buildRevealIO) this._buildRevealIO();
+      if (this._syncFooter) this._syncFooter();
+      if (this._onScroll) this._onScroll();
+    });
+  }
+  _applyTheme() {
+    document.body.classList.toggle('ahc-light', this.state.light);
+  }
+  _toggleTheme() {
+    const light = !this.state.light;
+    try { localStorage.setItem('ahnoud_theme', light ? 'light' : 'dark'); } catch (e) {}
+    this.setState({ light });
+  }
+  _applyCorners() {
+    const map = {
+      'Sharp':   { card: '2px',  ui: '2px' },
+      'Default': { card: '16px', ui: '8px' },
+      'Rounded': { card: '24px', ui: '14px' },
+      'Pill':    { card: '34px', ui: '22px' }
+    };
+    const c = map[this.props.cornerStyle] || map['Default'];
+    document.body.style.setProperty('--r-card', c.card);
+    document.body.style.setProperty('--r-ui', c.ui);
+  }
+
+  renderVals() {
+    const f = this.filtered();
+    const visibleCars = f.slice(0, this.state.visible).map((c, i) => {
+      const isNew = c.cond === 'New';
+      const meta = c.year + '  ·  ' + c.body + '  ·  ' + (isNew ? 'New' : this.fmt(c.km) + ' km');
+      const isHovered = this.state.hoveredId === c.id;
+      const isSaved = !!this.state.saved[c.id];
+      return {
+        onClick: () => this.openModal(c.id),
+        onEnter: () => this.setState({ hoveredId: c.id }),
+        onLeave: () => this.setState({ hoveredId: null }),
+        onSave: (e) => { e.stopPropagation(); e.preventDefault(); this.toggleSave(c.id); },
+        condition: c.cond,
+        isNew,
+        condBg: isNew ? 'rgba(232,65,14,0.12)' : 'rgba(255,255,255,0.04)',
+        condColor: isNew ? '#FF6A38' : '#B4B4B6',
+        condBorder: isNew ? 'rgba(232,65,14,0.4)' : 'rgba(255,255,255,0.12)',
+        status: c.status,
+        statusColor: this.statusColor(c.status),
+        bannerBg: c.status === 'Available' ? '#7CB518' : c.status === 'Reserved' ? '#E0A92E' : '#34343A',
+        bannerGlow: c.status === 'Available' ? 'rgba(124,181,24,0.55)' : c.status === 'Reserved' ? 'rgba(224,169,46,0.5)' : 'rgba(0,0,0,0.45)',
+        bannerText: c.status === 'Sold' ? '#E6E6E4' : '#0C140A',
+        bannerLabel: c.status,
+        makeModel: c.make + ' ' + c.model,
+        meta,
+        topLabel: c.cond + '  ·  ' + c.body,
+        subtext: c.engine + '  ·  ' + c.power,
+        tagLine: (isNew ? 'New' : this.fmt(c.km) + ' km') + '  +  ' + c.fuel,
+        footerSpecs: c.fuel + '  +  ' + c.power,
+        price: this.aed(c.price),
+        imgLabel: (c.make + ' ' + c.model).toUpperCase() + ' — FRONT 3/4',
+        slotId: 'carphoto-' + c.id,
+        slotPlaceholder: 'Drop ' + c.make + ' photo',
+        sYear: c.year,
+        sMileage: c.km === 0 ? 'New' : this.fmt(c.km) + ' km',
+        sPower: c.power,
+        cardSub: c.body + '  ·  ' + c.engine + '  ·  ' + c.color,
+        photoUrl: 'https://images.unsplash.com/photo-' + (this.CAR_PHOTOS[c.id] || '1503376780353-7e6692767b70') + '?w=1200&q=72&auto=format&fit=crop',
+        idx: String(i + 1).padStart(2, '0'),
+        imgTransform: isHovered ? 'scale(1.06)' : 'scale(1)',
+        saveOpacity: (isHovered || isSaved) ? 1 : 0,
+        saveFill: isSaved ? '#E8410E' : 'none',
+        saveColor: isSaved ? '#E8410E' : '#F2F2F0',
+        saveBorder: isSaved ? 'rgba(232,65,14,0.5)' : 'rgba(255,255,255,0.18)',
+        saveTitle: isSaved ? 'Saved' : 'Save car',
+      };
+    });
+
+    const m = this.CARS.find(c => c.id === this.state.modalId);
+    let modal = null;
+    if (m) {
+      const idx = ((this.state.photoIdx % this.ANGLES.length) + this.ANGLES.length) % this.ANGLES.length;
+      const mm = m.make + ' ' + m.model;
+      modal = {
+        makeModel: m.year + ' ' + mm,
+        condition: m.cond,
+        status: m.status,
+        statusColor: this.statusColor(m.status),
+        price: this.aed(m.price),
+        activePhoto: mm.toUpperCase() + ' — ' + this.ANGLES[idx],
+        photoUrl: 'https://images.unsplash.com/photo-' + (this.CAR_PHOTOS[m.id] || '1503376780353-7e6692767b70') + '?w=1400&q=75&auto=format&fit=crop',
+        showPhoto: idx === 0,
+        showPlaceholder: idx !== 0,
+        photoPos: String(idx + 1).padStart(2, '0') + ' / ' + String(this.ANGLES.length).padStart(2, '0'),
+        thumbs: this.ANGLES.map((a, i) => ({
+          label: a.split(' ')[0],
+          thumbUrl: i === 0 ? 'https://images.unsplash.com/photo-' + (this.CAR_PHOTOS[m.id] || '1503376780353-7e6692767b70') + '?w=200&q=60&auto=format&fit=crop' : '',
+          isPhoto: i === 0,
+          notPhoto: i !== 0,
+          border: i === idx ? '#E8410E' : 'rgba(255,255,255,0.1)',
+          onClick: () => this.setState({ photoIdx: i }),
+        })),
+        specs: [
+          { label: 'Year', value: String(m.year) },
+          { label: 'Condition', value: m.cond },
+          { label: 'Mileage', value: m.cond === 'New' ? '0 km' : this.fmt(m.km) + ' km' },
+          { label: 'Body', value: m.body },
+          { label: 'Engine', value: m.engine },
+          { label: 'Power', value: m.power },
+          { label: 'Transmission', value: m.trans },
+          { label: 'Fuel', value: m.fuel },
+          { label: 'Exterior', value: m.color },
+          { label: 'Drivetrain', value: m.body === 'Coupe' && m.make === 'Ford' ? 'RWD' : 'AWD' },
+        ],
+        highlights: m.hl,
+        stock: 'STOCK NO. AHC-' + String(m.id).padStart(4, '0'),
+        onEnquire: () => this.enquire(m),
+      };
+    }
+
+    const groups = [
+      { key: 'brandSel', label: 'Make',   opts: Array.from(new Set(this.CARS.map(c => c.make))) },
+      { key: 'bodySel',  label: 'Body',   opts: Array.from(new Set(this.CARS.map(c => c.body))) },
+      { key: 'priceSel', label: 'Budget', opts: ['Under 300k', '300k – 600k', '600k – 1M', '1M+'] }
+    ];
+    const filterGroups = groups.map((g) => {
+      const sel = this.state[g.key];
+      const open = this.state.openFilter === g.key;
+      return {
+        key: g.key, label: g.label, count: sel.length, hasCount: sel.length > 0,
+        open, notOpen: !open,
+        pillBorder: (sel.length > 0 || open) ? 'rgba(232,65,14,0.55)' : 'rgba(255,255,255,0.14)',
+        chevron: open ? '▲' : '▼',
+        onToggleOpen: () => this.setState({ openFilter: open ? null : g.key }),
+        options: g.opts.map((o) => ({
+          value: o, checked: sel.includes(o), notChecked: !sel.includes(o),
+          boxBg: sel.includes(o) ? '#E8410E' : 'transparent',
+          boxBorder: sel.includes(o) ? '#E8410E' : 'rgba(255,255,255,0.25)',
+          onToggle: () => this.toggleFilter(g.key, o)
+        }))
+      };
+    });
+    const totalActive = this.state.brandSel.length + this.state.bodySel.length + this.state.priceSel.length;
+
+    return {
+      timecode: this._nowStr(),
+      // filters
+      filterGroups,
+      hasActiveFilters: totalActive > 0,
+      onReset: () => this.setState({ brandSel: [], bodySel: [], priceSel: [], openFilter: null, visible: 8 }),
+      isLight: this.state.light,
+      isDark: !this.state.light,
+      onToggleTheme: () => this._toggleTheme(),
+      onCloseFilters: () => { if (this.state.openFilter) this.setState({ openFilter: null }); },
+      resultCount: f.length,
+      // grid
+      visibleCars,
+      showLoadMore: f.length > this.state.visible,
+      noResults: f.length === 0,
+      onLoadMore: () => this.setState({ visible: this.state.visible + 4 }),
+      // modal
+      modalOpen: !!m,
+      modal,
+      onClose: () => this.closeModal(),
+      onPrev: () => this.setState({ photoIdx: this.state.photoIdx - 1 }),
+      onNext: () => this.setState({ photoIdx: this.state.photoIdx + 1 }),
+      stop: (e) => e.stopPropagation(),
+      // trust
+      trust: [
+        { no: '01', title: 'Certified & inspected', desc: 'Every vehicle clears a 200-point mechanical and cosmetic inspection before it reaches the floor.' },
+        { no: '02', title: 'Transparent pricing', desc: 'The price on the card is the price you pay. Full service history and a clear report on every car.' },
+        { no: '03', title: 'A team that knows cars', desc: 'Fourteen years on Sheikh Zayed Road. We drive what we sell and we tell you straight.' },
+        { no: '04', title: 'Test drives, always', desc: 'Book any car for a real drive. No pressure, no paperwork until you are sure.' },
+      ],
+      // reviews
+      reviews: [
+        { quote: 'Found my Range Rover here. Honest about the history, fair on the price, and it was detailed and ready when I arrived.', name: 'Omar Al Habtoor', bought: '2024 RANGE ROVER · DUBAI', initials: 'OA' },
+        { quote: 'I dread car showrooms. This was the opposite — relaxed, the spec sheet matched the car exactly, no surprises.', name: 'Sara Khan', bought: '2022 BMW M5 · ABU DHABI', initials: 'SK' },
+        { quote: 'Bought a Land Cruiser sight-unseen from Al Ain. They sent video, answered everything, delivered it spotless.', name: 'Rashid Al Maktoum', bought: '2024 LAND CRUISER · AL AIN', initials: 'RA' },
+      ],
+      // contact / form
+      contactCar: this.state.contactCar,
+      onContactCar: (e) => this.setState({ contactCar: e.target.value }),
+      carFieldBorder: this.state.contactCar ? 'rgba(232,65,14,0.45)' : 'rgba(255,255,255,0.12)',
+      formFirstName: this.state.form.firstName,
+      formLastName: this.state.form.lastName,
+      formPhone: this.state.form.phone,
+      formMessage: this.state.form.message,
+      onFirstName: (e) => this.setState({ form: { ...this.state.form, firstName: e.target.value } }),
+      onLastName: (e) => this.setState({ form: { ...this.state.form, lastName: e.target.value } }),
+      onPhone: (e) => this.setState({ form: { ...this.state.form, phone: e.target.value } }),
+      onMessage: (e) => this.setState({ form: { ...this.state.form, message: e.target.value } }),
+      onSubmit: () => this.submit(),
+      sent: this.state.sent,
+      sentMsg: this.state.sentMsg,
+      onResetForm: () => this.setState({ sent: false, form: { firstName: '', lastName: '', phone: '', message: '' }, contactCar: '' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0A0A0B; color: #F2F2F0; font-family: 'Archivo', sans-serif; -webkit-font-smoothing: antialiased; --r-card: 16px; --r-ui: 8px; }
+  input, select, textarea, button { font-family: inherit; }
+  select option { background: #141417; color: #F2F2F0; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0A0A0B; }
+  ::-webkit-scrollbar-thumb { background: #232326; border-radius: var(--r-card); } /*sb*/
+  @keyframes cmsDrawerIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cmsFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes cmsRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ===== responsive reflow (real viewports) ===== */
+  @media (max-width: 860px) {
+    .cms-stats { grid-template-columns: repeat(2, 1fr) !important; }
+    .cms-hero-grid { grid-template-columns: 1fr !important; }
+    .cms-form-grid { grid-template-columns: 1fr !important; }
+    .cms-header { flex-wrap: wrap; row-gap: 12px; padding-left: 18px !important; padding-right: 18px !important; }
+    .cms-title { flex: 1 1 auto; min-width: 0; }
+    .cms-tabs { margin-left: 0 !important; }
+  }
+  @media (max-width: 560px) {
+    .cms-list-head { display: none !important; }
+    .cms-row { display: flex !important; flex-wrap: wrap; align-items: center; gap: 11px 14px !important; }
+    .cms-row > div:nth-child(1) { flex: 1 1 100%; }
+    .cms-row > div:nth-child(5) { margin-left: auto; }
+  }
+
+  /* ===== device-frame preview (driven by the Device tweak) ===== */
+  body.cms-dev { background: #050506; display: flex; justify-content: center; align-items: flex-start; height: 100vh; overflow: hidden; padding: 28px 20px; box-sizing: border-box; }
+  body.cms-dev #cms-root {
+    flex: 0 0 auto;
+    transform: translateZ(0);              /* containing block: the fixed drawer pins to the frame, not the window */
+    overflow-y: auto; overflow-x: hidden;
+    min-height: 0 !important;
+    box-shadow: 0 50px 130px -34px rgba(0,0,0,0.92), 0 0 0 1px rgba(255,255,255,0.07);
+  }
+  body.cms-dev #cms-root::-webkit-scrollbar { width: 0; height: 0; }
+  body.cms-tablet #cms-root { width: 834px !important; height: calc(100vh - 56px); max-height: 1180px; border-radius: 22px; }
+  body.cms-mobile #cms-root { width: 390px !important; height: calc(100vh - 56px); max-height: 880px; border-radius: 30px; }
+  /* device-frame reflow (frame width, not viewport — keyed to body class) */
+  body.cms-mobile .cms-stats { grid-template-columns: repeat(2, 1fr) !important; }
+  body.cms-mobile .cms-hero-grid { grid-template-columns: 1fr !important; }
+  body.cms-mobile .cms-form-grid { grid-template-columns: 1fr !important; }
+  body.cms-mobile .cms-header { flex-wrap: wrap; row-gap: 12px; padding-left: 18px !important; padding-right: 18px !important; }
+  body.cms-mobile .cms-title { flex: 1 1 auto; min-width: 0; }
+  body.cms-mobile .cms-tabs { margin-left: 0 !important; }
+  body.cms-mobile .cms-list-head { display: none !important; }
+  body.cms-mobile .cms-row { display: flex !important; flex-wrap: wrap; align-items: center; gap: 11px 14px !important; }
+  body.cms-mobile .cms-row > div:nth-child(1) { flex: 1 1 100%; }
+  body.cms-mobile .cms-row > div:nth-child(5) { margin-left: auto; }
+</style>
+</helmet>
+
+<div id="cms-root" style="min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="cms-header" style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: 18px clamp(20px,4vw,44px); background: rgba(10,10,11,0.86); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <span style="display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--r-card); background: #1C1C1E; flex-shrink: 0;"><img src="assets/ahnoud-mark-light.svg" alt="Ahnoud Cars" style="width: 26px; height: 26px; object-fit: contain;"></span>
+    <div class="cms-title" style="display: flex; flex-direction: column; gap: 3px;">
+      <div style="font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1;">Inventory CMS</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Ahnoud Cars · {{ tabSubtitle }}</div>
+    </div>
+
+    <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ onAdd }}" style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">
+        <span style="font-size: 15px; line-height: 0; margin-top: -1px;">+</span> Add car
+      </button>
+    </sc-if>
+  </header>
+
+  <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
+  <!-- ===== STATS ROW ===== -->
+  <div class="cms-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid rgba(255,255,255,0.08);">
+    <div style="padding: 22px clamp(20px,4vw,44px); border-right: 1px solid rgba(255,255,255,0.06);">
+      <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em;">{{ stats.total }}</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-top: 7px;">Total cars</div>
+    </div>
+    <div style="padding: 22px clamp(20px,4vw,44px); border-right: 1px solid rgba(255,255,255,0.06);">
+      <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #36B37E;">{{ stats.available }}</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-top: 7px;">Available</div>
+    </div>
+    <div style="padding: 22px clamp(20px,4vw,44px); border-right: 1px solid rgba(255,255,255,0.06);">
+      <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #E0A92E;">{{ stats.reserved }}</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-top: 7px;">Reserved</div>
+    </div>
+    <div style="padding: 22px clamp(20px,4vw,44px);">
+      <div style="font-size: 30px; font-weight: 800; letter-spacing: -0.02em; color: #9A9A9E;">{{ stats.sold }}</div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-top: 7px;">Sold</div>
+    </div>
+  </div>
+
+  <!-- ===== TOOLBAR ===== -->
+  <div style="display: flex; align-items: center; gap: 14px; padding: 22px clamp(20px,4vw,44px) 16px; flex-wrap: wrap;">
+    <div style="position: relative; flex: 1; min-width: 240px;">
+      <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6E6E70; pointer-events: none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+      </span>
+      <input value="{{ query }}" onInput="{{ onQuery }}" placeholder="Search make or model…" style="width: 100%; background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 16px 13px 40px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+    </div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6E70; white-space: nowrap;">{{ countLabel }}</div>
+  </div>
+
+  <!-- ===== CAR LIST ===== -->
+  <div style="padding: 0 clamp(20px,4vw,44px) 60px; flex: 1;">
+    <!-- column header -->
+    <div class="cms-list-head" style="display: grid; grid-template-columns: 1fr 200px 150px 130px 92px; gap: 16px; padding: 0 18px 12px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: #5A5A5C;">
+      <div>Vehicle</div>
+      <div>Specs</div>
+      <div>Price</div>
+      <div>Status</div>
+      <div style="text-align: right;">Actions</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <sc-for list="{{ rows }}" as="car" hint-placeholder-count="6">
+        <div class="cms-row" style="display: grid; grid-template-columns: 1fr 200px 150px 130px 92px; gap: 16px; align-items: center; padding: 16px 18px; background: #0D0D0F; border: 1px solid rgba(255,255,255,0.08); border-radius: var(--r-ui); transition: border-color .2s, background .2s;" style-hover="border-color: rgba(255,255,255,0.16); background: #101013;">
+          <!-- vehicle -->
+          <div style="display: flex; align-items: center; gap: 14px; min-width: 0;">
+            <sc-if value="{{ car.hasCover }}" hint-placeholder-val="{{ false }}">
+              <div style="width: 46px; height: 46px; border-radius: var(--r-ui); overflow: hidden; border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; background-image: url('{{ car.cover }}'); background-size: cover; background-position: center; background-color: #141417;"></div>
+            </sc-if>
+            <sc-if value="{{ car.noCover }}" hint-placeholder-val="{{ true }}">
+              <div style="width: 46px; height: 46px; border-radius: var(--r-ui); background: linear-gradient(145deg, #1A1A1D, #0E0E10); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: #8C8A86;">{{ car.initials }}</div>
+            </sc-if>
+            <div style="min-width: 0;">
+              <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ car.label }}</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; color: #6E6E70; margin-top: 4px;">{{ car.photoCount }}</div>
+            </div>
+          </div>
+          <!-- specs -->
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #9A9A9E; line-height: 1.5;">{{ car.specLine }}</div>
+          <!-- price -->
+          <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.01em;">{{ car.priceFmt }}</div>
+          <!-- status -->
+          <div>
+            <span style="display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 116px; box-sizing: border-box; padding: 6px 11px; border-radius: var(--r-ui); background: {{ car.statusBg }}; border: 1px solid {{ car.statusBorder }}; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: {{ car.statusColor }};">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ car.statusColor }};"></span>{{ car.status }}
+            </span>
+          </div>
+          <!-- actions -->
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <sc-if value="{{ car.confirming }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; gap: 6px; animation: cmsFade .2s both;">
+                <button onClick="{{ car.onConfirmDelete }}" title="Confirm delete" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: #B0301A; border: none; color: #fff; cursor: pointer;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                </button>
+                <button onClick="{{ car.onCancelDelete }}" title="Cancel" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: transparent; border: 1px solid rgba(255,255,255,0.16); color: #9A9A9E; cursor: pointer;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                </button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ car.notConfirming }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button onClick="{{ car.onEdit }}" title="Edit" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #C4C4C2; cursor: pointer; transition: all .2s;" style-hover="border-color: #E8410E; color: #E8410E;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+                </button>
+                <button onClick="{{ car.onDelete }}" title="Remove" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #C4C4C2; cursor: pointer; transition: all .2s;" style-hover="border-color: #B0301A; color: #E0604A; background: rgba(176,48,26,0.1);">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                </button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+      <div style="text-align: center; padding: 80px 20px; border: 1px dashed rgba(255,255,255,0.12); border-radius: var(--r-ui); margin-top: 8px;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">No cars match your search.</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6E6E70;">Try a different make or model, or add a new car.</div>
+      </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ===== ADD / EDIT DRAWER ===== -->
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onCloseDrawer }}" style="position: fixed; inset: 0; z-index: 80; background: rgba(5,5,6,0.7); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: cmsFade .2s both;"></div>
+    <div style="position: fixed; top: 0; right: 0; bottom: 0; z-index: 81; width: 540px; max-width: 94%; background: #0C0C0E; border-left: 1px solid rgba(255,255,255,0.1); box-shadow: -30px 0 80px -20px rgba(0,0,0,0.7); display: flex; flex-direction: column; animation: cmsDrawerIn .35s cubic-bezier(.2,.7,.2,1) both;">
+      <!-- drawer header -->
+      <div style="display: flex; align-items: center; gap: 14px; padding: 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #E8410E;">{{ drawerKicker }}</div>
+          <div style="font-size: 21px; font-weight: 800; letter-spacing: -0.02em;">{{ drawerTitle }}</div>
+        </div>
+        <button onClick="{{ onCloseDrawer }}" style="margin-left: auto; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: transparent; border: 1px solid rgba(255,255,255,0.14); color: #C4C4C2; cursor: pointer; transition: all .2s;" style-hover="border-color: rgba(255,255,255,0.3);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- drawer body (scrolls) -->
+      <div style="flex: 1; overflow-y: auto; padding: 28px;">
+
+        <!-- Photos -->
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 16px;">Photos</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 12px; margin-bottom: 30px;">
+          <sc-for list="{{ photoTiles }}" as="photo" hint-placeholder-count="0">
+            <div style="position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-ui); overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background-image: url('{{ photo.src }}'); background-size: cover; background-position: center; background-color: #141417;">
+              <sc-if value="{{ photo.isCover }}" hint-placeholder-val="{{ false }}">
+                <span style="position: absolute; top: 7px; left: 7px; font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 7px; border-radius: 3px; background: #E8410E; color: #fff;">Cover</span>
+              </sc-if>
+              <button onClick="{{ photo.onRemove }}" title="Remove photo" style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-ui); background: rgba(8,8,9,0.72); border: 1px solid rgba(255,255,255,0.18); color: #F2F2F0; cursor: pointer; backdrop-filter: blur(4px);" style-hover="background: #B0301A; border-color: #B0301A;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+          <!-- add tile -->
+          <div onClick="{{ onAddPhotos }}" onDragOver="{{ onPhotoDragOver }}" onDragLeave="{{ onPhotoDragLeave }}" onDrop="{{ onPhotoDrop }}" style="aspect-ratio: 4 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; border: 1.5px dashed {{ photoDropBorder }}; border-radius: var(--r-ui); background: {{ photoDropBg }}; cursor: pointer; transition: all .2s;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C4C4C2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: #8C8A86; padding: 0 6px;">Add photos</span>
+          </div>
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6E6E70; margin: -20px 0 30px;">{{ photoHint }}</div>
+
+        <!-- Identity -->
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 16px;">Identity</div>
+        <div class="cms-form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Make *</label>
+            <input value="{{ form.make }}" onInput="{{ on_make }}" placeholder="Porsche" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Model *</label>
+            <input value="{{ form.model }}" onInput="{{ on_model }}" placeholder="911 Carrera S" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Body type</label>
+            <select value="{{ form.body }}" onChange="{{ on_body }}" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none; cursor: pointer;" style-focus="border-color: #E8410E;">
+              <option>Coupe</option><option>Sedan</option><option>SUV</option><option>Convertible</option><option>Hatchback</option><option>Pickup</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Year</label>
+            <input value="{{ form.year }}" onInput="{{ on_year }}" type="number" placeholder="2024" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Condition</label>
+            <select value="{{ form.cond }}" onChange="{{ on_cond }}" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none; cursor: pointer;" style-focus="border-color: #E8410E;">
+              <option>New</option><option>Used</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Status</label>
+            <select value="{{ form.status }}" onChange="{{ on_status }}" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none; cursor: pointer;" style-focus="border-color: #E8410E;">
+              <option>Available</option><option>Reserved</option><option>Sold</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pricing & specs -->
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 16px;">Pricing &amp; specs</div>
+        <div class="cms-form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Price (AED) *</label>
+            <input value="{{ form.price }}" onInput="{{ on_price }}" type="number" placeholder="545000" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Mileage (km)</label>
+            <input value="{{ form.km }}" onInput="{{ on_km }}" type="number" placeholder="18500" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Fuel</label>
+            <select value="{{ form.fuel }}" onChange="{{ on_fuel }}" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none; cursor: pointer;" style-focus="border-color: #E8410E;">
+              <option>Petrol</option><option>Hybrid</option><option>Electric</option><option>Diesel</option>
+            </select>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Transmission</label>
+            <input value="{{ form.trans }}" onInput="{{ on_trans }}" placeholder="Auto (PDK)" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Engine</label>
+            <input value="{{ form.engine }}" onInput="{{ on_engine }}" placeholder="3.0L Flat-6 TT" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Power</label>
+            <input value="{{ form.power }}" onInput="{{ on_power }}" placeholder="444 hp" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; grid-column: 1 / -1;">
+            <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Exterior color</label>
+            <input value="{{ form.color }}" onInput="{{ on_color }}" placeholder="GT Silver" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          </div>
+        </div>
+
+        <!-- Highlights -->
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 16px;">Highlights</div>
+        <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+          <input value="{{ hlInput }}" onInput="{{ onHlInput }}" onKeyDown="{{ onHlKey }}" placeholder="Add a feature, then press Enter" style="flex: 1; background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+          <button onClick="{{ onAddHl }}" style="padding: 0 20px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-ui); color: #F2F2F0; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; transition: all .2s;" style-hover="background: rgba(255,255,255,0.12);">Add</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <sc-for list="{{ hlChips }}" as="chip" hint-placeholder-count="3">
+            <span style="display: inline-flex; align-items: center; gap: 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #D4D4D2; padding: 8px 10px 8px 13px; border: 1px solid rgba(255,255,255,0.14); border-radius: var(--r-ui);">
+              {{ chip.text }}
+              <button onClick="{{ chip.onRemove }}" style="display: flex; width: 16px; height: 16px; align-items: center; justify-content: center; background: transparent; border: none; color: #8C8A86; cursor: pointer; padding: 0;" style-hover="color: #E8410E;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+              </button>
+            </span>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- drawer footer -->
+      <div style="flex-shrink: 0; padding: 18px 28px; border-top: 1px solid rgba(255,255,255,0.08); background: #0A0A0B;">
+        <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #E0604A; margin-bottom: 12px;">{{ formError }}</div>
+        </sc-if>
+        <div style="display: flex; gap: 12px;">
+          <button onClick="{{ onCloseDrawer }}" style="flex: 0 0 auto; padding: 15px 24px; background: transparent; border: 1px solid rgba(255,255,255,0.16); border-radius: var(--r-ui); color: #C4C4C2; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; transition: all .2s;" style-hover="border-color: rgba(255,255,255,0.3);">Cancel</button>
+          <button onClick="{{ onSave }}" style="flex: 1; padding: 15px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">{{ saveLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:860},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Desktop&quot;,&quot;Tablet&quot;,&quot;Mobile&quot;],&quot;default&quot;:&quot;Desktop&quot;},&quot;cornerStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Sharp&quot;,&quot;Default&quot;,&quot;Rounded&quot;,&quot;Pill&quot;],&quot;default&quot;:&quot;Default&quot;}}">
+class Component extends DCLogic {
+  state = {
+    cars: [
+      { id: 1,  make: 'Porsche',       model: '911 Carrera S',       body: 'Coupe', year: 2023, cond: 'Used', price: 545000,  km: 18500, fuel: 'Petrol',   trans: 'Auto (PDK)',  engine: '3.0L Flat-6 TT', power: '444 hp', color: 'GT Silver',     status: 'Available', hl: ['Sport Chrono', 'PASM', 'Bose Surround'] },
+      { id: 2,  make: 'Mercedes-Benz', model: 'G 63 AMG',            body: 'SUV',   year: 2024, cond: 'New',  price: 1150000, km: 0,     fuel: 'Petrol',   trans: 'Auto (9G)',   engine: '4.0L V8 BiTurbo', power: '585 hp', color: 'Obsidian Black', status: 'Available', hl: ['AMG Night Pkg', 'Burmester', '22" Forged'] },
+      { id: 3,  make: 'BMW',           model: 'M5 Competition',      body: 'Sedan', year: 2022, cond: 'Used', price: 385000,  km: 32000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.4L V8 TT',    power: '625 hp', color: 'Marina Bay Blue', status: 'Reserved', hl: ['M Carbon Seats', 'Carbon Roof', "Driver's Pkg"] },
+      { id: 4,  make: 'Land Rover',    model: 'Range Rover Autobiography', body: 'SUV', year: 2024, cond: 'New', price: 920000, km: 0, fuel: 'Hybrid', trans: 'Auto (8-spd)', engine: '4.4L V8', power: '523 hp', color: 'Santorini Black', status: 'Available', hl: ['Executive Rear', 'Meridian 3D', '23" Wheels'] },
+      { id: 5,  make: 'Audi',          model: 'RS Q8',               body: 'SUV',   year: 2023, cond: 'Used', price: 615000,  km: 21000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8 TT',    power: '591 hp', color: 'Daytona Grey',  status: 'Available', hl: ['RS Design', 'Pano Roof', 'B&O 3D'] },
+      { id: 6,  make: 'Lamborghini',   model: 'Urus',                body: 'SUV',   year: 2022, cond: 'Used', price: 1050000, km: 14500, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8 BiTurbo', power: '641 hp', color: 'Giallo Auge', status: 'Available', hl: ['Ad Personam', 'Carbon Pkg', '23" Wheels'] },
+      { id: 7,  make: 'Toyota',        model: 'Land Cruiser 300 VX-R', body: 'SUV', year: 2024, cond: 'New', price: 410000, km: 0, fuel: 'Petrol', trans: 'Auto (10-spd)', engine: '3.5L V6 TT', power: '409 hp', color: 'Pearl White', status: 'Available', hl: ['Multi-Terrain', 'JBL Premium', 'Cool Box'] },
+      { id: 8,  make: 'Bentley',       model: 'Continental GT',      body: 'Coupe', year: 2021, cond: 'Used', price: 780000,  km: 26000, fuel: 'Petrol',   trans: 'Auto (8-spd)', engine: '4.0L V8',       power: '542 hp', color: 'Glacier White', status: 'Reserved', hl: ['Mulliner', 'Naim Audio', 'Rotating Display'] },
+      { id: 9,  make: 'Nissan',        model: 'Patrol Platinum',     body: 'SUV',   year: 2023, cond: 'Used', price: 285000,  km: 38000, fuel: 'Petrol',   trans: 'Auto (7-spd)', engine: '5.6L V8',       power: '400 hp', color: 'Gobi Sand',     status: 'Available', hl: ['Around View', 'BOSE', '2nd Row Captain'] },
+      { id: 10, make: 'Ford',          model: 'Mustang GT',          body: 'Coupe', year: 2022, cond: 'Used', price: 195000,  km: 29500, fuel: 'Petrol',   trans: 'Manual (6-spd)', engine: '5.0L V8',     power: '450 hp', color: 'Race Red',      status: 'Available', hl: ['Active Exhaust', 'Recaro', 'MagneRide'] },
+      { id: 11, make: 'Lexus',         model: 'LX 600 Signature',    body: 'SUV',   year: 2024, cond: 'New',  price: 690000,  km: 0,     fuel: 'Petrol',   trans: 'Auto (10-spd)', engine: '3.5L V6 TT',   power: '409 hp', color: 'Sonic Quartz',  status: 'Available', hl: ['Mark Levinson', 'Rear Ent.', '4-Zone Climate'] },
+      { id: 12, make: 'Tesla',         model: 'Model S Plaid',       body: 'Sedan', year: 2023, cond: 'Used', price: 420000,  km: 16000, fuel: 'Electric', trans: 'Single-speed', engine: 'Tri-Motor',    power: '1020 hp', color: 'Pearl White',  status: 'Sold',      hl: ['Yoke Steering', '1020 hp', 'Premium Connectivity'] },
+    ],
+    query: '',
+    drawerOpen: false,
+    editId: null,
+    confirmId: null,
+    hlInput: '',
+    formError: '',
+    form: this._blank(),
+    photoDrag: false,
+  };
+
+  componentDidMount() {
+    this._applyDevice();
+    this._applyCorners();
+  }
+
+  componentDidUpdate() {
+    this._applyDevice();
+    this._applyCorners();
+  }
+
+  _applyCorners() {
+    const map = {
+      'Sharp':   { card: '2px',  ui: '2px' },
+      'Default': { card: '16px', ui: '8px' },
+      'Rounded': { card: '24px', ui: '14px' },
+      'Pill':    { card: '34px', ui: '22px' }
+    };
+    const c = map[this.props.cornerStyle] || map['Default'];
+    document.body.style.setProperty('--r-card', c.card);
+    document.body.style.setProperty('--r-ui', c.ui);
+  }
+
+  _applyDevice() {
+    const d = this.props.device || 'Desktop';
+    if (d === this._curDevice) return;
+    this._curDevice = d;
+    const b = document.body;
+    b.classList.remove('cms-dev', 'cms-tablet', 'cms-mobile');
+    if (d === 'Tablet') b.classList.add('cms-dev', 'cms-tablet');
+    else if (d === 'Mobile') b.classList.add('cms-dev', 'cms-mobile');
+    const root = document.getElementById('cms-root');
+    if (root && root.scrollTo) root.scrollTo(0, 0);
+  }
+
+  _processImage(file, maxW, cb) {
+    if (!file || !/^image\//.test(file.type)) { this.setState({ formError: 'Please choose an image file.' }); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(cv.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => this.setState({ formError: 'Could not read that image.' });
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  _blank() {
+    return { make: '', model: '', body: 'Coupe', year: new Date().getFullYear(), cond: 'New', price: '', km: 0, fuel: 'Petrol', trans: '', engine: '', power: '', color: '', status: 'Available', hl: [], photos: [] };
+  }
+
+  _addPhotos() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = () => { if (input.files) Array.from(input.files).forEach((f) => this._ingestPhoto(f)); };
+    input.click();
+  }
+
+  _ingestPhoto(file) {
+    this._processImage(file, 1280, (d) => {
+      this.setState((s) => ({ form: { ...s.form, photos: [...(s.form.photos || []), d] }, formError: '', photoDrag: false }));
+    });
+  }
+
+  _removePhoto(i) {
+    this.setState((s) => {
+      const photos = (s.form.photos || []).slice();
+      photos.splice(i, 1);
+      return { form: { ...s.form, photos } };
+    });
+  }
+
+  _statusTheme(s) {
+    if (s === 'Available') return { color: '#36B37E', bg: 'rgba(54,179,126,0.12)', border: 'rgba(54,179,126,0.3)' };
+    if (s === 'Reserved')  return { color: '#E0A92E', bg: 'rgba(224,169,46,0.12)', border: 'rgba(224,169,46,0.3)' };
+    return { color: '#B9B9BD', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.14)' };
+  }
+
+  _initials(c) {
+    const m = (c.make || '?').trim();
+    return m.slice(0, 2).toUpperCase();
+  }
+
+  openAdd() {
+    this.setState({ drawerOpen: true, editId: null, form: this._blank(), hlInput: '', formError: '', confirmId: null });
+  }
+
+  openEdit(car) {
+    this.setState({ drawerOpen: true, editId: car.id, form: { ...car, hl: [...car.hl], photos: [...(car.photos || [])] }, hlInput: '', formError: '', confirmId: null });
+  }
+
+  closeDrawer() {
+    this.setState({ drawerOpen: false, formError: '' });
+  }
+
+  setField(key, val) {
+    this.setState((s) => ({ form: { ...s.form, [key]: val } }));
+  }
+
+  addHighlight() {
+    const v = this.state.hlInput.trim();
+    if (!v) return;
+    this.setState((s) => ({ form: { ...s.form, hl: [...s.form.hl, v] }, hlInput: '' }));
+  }
+
+  removeHighlight(i) {
+    this.setState((s) => {
+      const hl = s.form.hl.slice();
+      hl.splice(i, 1);
+      return { form: { ...s.form, hl } };
+    });
+  }
+
+  saveCar() {
+    const f = this.state.form;
+    if (!f.make.trim() || !f.model.trim() || f.price === '' || isNaN(Number(f.price))) {
+      this.setState({ formError: 'Make, model and a numeric price are required.' });
+      return;
+    }
+    const clean = {
+      make: f.make.trim(),
+      model: f.model.trim(),
+      body: f.body,
+      year: Number(f.year) || new Date().getFullYear(),
+      cond: f.cond,
+      price: Number(f.price),
+      km: Number(f.km) || 0,
+      fuel: f.fuel,
+      trans: f.trans.trim() || '—',
+      engine: f.engine.trim() || '—',
+      power: f.power.trim() || '—',
+      color: f.color.trim() || '—',
+      status: f.status,
+      hl: f.hl,
+      photos: f.photos || [],
+    };
+    if (this.state.editId !== null) {
+      this.setState({ cars: this.state.cars.map((c) => c.id === this.state.editId ? { ...clean, id: c.id } : c), drawerOpen: false, formError: '' });
+    } else {
+      const id = this.state.cars.reduce((m, c) => Math.max(m, c.id), 0) + 1;
+      this.setState({ cars: [{ ...clean, id }, ...this.state.cars], drawerOpen: false, formError: '' });
+    }
+  }
+
+  removeCar(id) {
+    this.setState({ cars: this.state.cars.filter((c) => c.id !== id), confirmId: null });
+  }
+
+  renderVals() {
+    const q = this.state.query.trim().toLowerCase();
+    const cars = this.state.cars;
+    const rows = cars
+      .filter((c) => !q || (c.make + ' ' + c.model).toLowerCase().includes(q))
+      .map((c) => {
+        const t = this._statusTheme(c.status);
+        const kmTxt = c.km === 0 ? 'New · 0 km' : c.km.toLocaleString() + ' km';
+        return {
+          ...c,
+          label: c.make + ' ' + c.model,
+          initials: this._initials(c),
+          cover: (c.photos && c.photos.length) ? c.photos[0] : '',
+          hasCover: !!(c.photos && c.photos.length),
+          noCover: !(c.photos && c.photos.length),
+          photoCount: (c.photos && c.photos.length) ? c.photos.length + (c.photos.length === 1 ? ' photo' : ' photos') : 'No photos',
+          sub: c.cond + ' · ' + c.color,
+          specLine: c.body + ' · ' + c.year + ' · ' + kmTxt,
+          priceFmt: 'AED ' + Number(c.price).toLocaleString(),
+          statusColor: t.color, statusBg: t.bg, statusBorder: t.border,
+          confirming: this.state.confirmId === c.id,
+          notConfirming: this.state.confirmId !== c.id,
+          onEdit: () => this.openEdit(c),
+          onDelete: () => this.setState({ confirmId: c.id }),
+          onConfirmDelete: () => this.removeCar(c.id),
+          onCancelDelete: () => this.setState({ confirmId: null }),
+        };
+      });
+
+    const handlers = {};
+    ['make', 'model', 'year', 'price', 'km', 'trans', 'engine', 'power', 'color'].forEach((k) => {
+      handlers['on_' + k] = (e) => this.setField(k, e.target.value);
+    });
+    ['body', 'cond', 'status', 'fuel'].forEach((k) => {
+      handlers['on_' + k] = (e) => this.setField(k, e.target.value);
+    });
+
+    const hlChips = this.state.form.hl.map((text, i) => ({
+      text,
+      onRemove: () => this.removeHighlight(i),
+    }));
+
+    const total = cars.length;
+    const available = cars.filter((c) => c.status === 'Available').length;
+    const reserved = cars.filter((c) => c.status === 'Reserved').length;
+    const sold = cars.filter((c) => c.status === 'Sold').length;
+
+    return {
+      tabInventory: true,
+      tabSubtitle: 'Manage collection',
+
+      rows,
+      isEmpty: rows.length === 0,
+      query: this.state.query,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      countLabel: rows.length + (rows.length === 1 ? ' car' : ' cars'),
+      stats: { total, available, reserved, sold },
+
+      onAdd: () => this.openAdd(),
+      drawerOpen: this.state.drawerOpen,
+      onCloseDrawer: () => this.closeDrawer(),
+      drawerKicker: this.state.editId !== null ? 'Edit vehicle' : 'New vehicle',
+      drawerTitle: this.state.editId !== null ? 'Edit car details' : 'Add a car',
+      saveLabel: this.state.editId !== null ? 'Save changes' : 'Add to inventory',
+
+      form: this.state.form,
+      ...handlers,
+
+      hlInput: this.state.hlInput,
+      onHlInput: (e) => this.setState({ hlInput: e.target.value }),
+      onHlKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addHighlight(); } },
+      onAddHl: () => this.addHighlight(),
+      hlChips,
+
+      onSave: () => this.saveCar(),
+      formError: this.state.formError,
+
+      photoTiles: (this.state.form.photos || []).map((src, i) => ({
+        src,
+        isCover: i === 0,
+        onRemove: () => this._removePhoto(i),
+      })),
+      onAddPhotos: () => this._addPhotos(),
+      onPhotoDragOver: (e) => { e.preventDefault(); if (!this.state.photoDrag) this.setState({ photoDrag: true }); },
+      onPhotoDragLeave: () => this.setState({ photoDrag: false }),
+      onPhotoDrop: (e) => { e.preventDefault(); const fs = e.dataTransfer && e.dataTransfer.files; if (fs) Array.from(fs).forEach((f) => this._ingestPhoto(f)); else this.setState({ photoDrag: false }); },
+      photoDropBorder: this.state.photoDrag ? '#E8410E' : 'rgba(255,255,255,0.18)',
+      photoDropBg: this.state.photoDrag ? 'rgba(232,65,14,0.07)' : 'rgba(255,255,255,0.02)',
+      photoHint: (this.state.form.photos && this.state.form.photos.length) ? 'First photo is the cover. Drag more in or click to add.' : 'Add one or more photos — the first becomes the cover image.',
+    };
+  }
+}
+</script>
+</body>
+</html>
