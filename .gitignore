@@ -1,0 +1,13 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Dependencies / build output (only if you later add a bundler)
+node_modules/
+dist/
+
+# Local prototype state (image-slot drops persist in browser localStorage, not here)
+.image-slots.state.json
