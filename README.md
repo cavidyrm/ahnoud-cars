@@ -34,7 +34,7 @@ A single scrolling page. A floating pill **navigation bar** is fixed to the bott
 - Links are mono-free sans (Plus Jakarta Sans / Inter), 14.5px, weight 500–600.
 - The active link gets a moving highlight (subtle white fill + hairline border) that follows clicks.
 - Hides (fades + slides down 24px) when the footer begins to reveal; reappears on scroll up.
-- Mobile (≤620px): condensed padding, smaller logo (34px), all four links remain with side margins so nothing clips.
+- Mobile (≤620px): the pill becomes a deterministic near-full-width bar (`width: calc(100% - 16px)`, capped at 440px) so it can never overflow the viewport. Every item is forced to a uniform **40px** height (`box-sizing: border-box`, centered flex); the logo tile and theme toggle are fixed 40×40 squares, and the four text links each `flex: 1` (equal width, 11px, tight letter-spacing) so the row reads consistently regardless of label length or which link is active.
 
 #### 2. Hero (full-viewport)
 - **Full-bleed background image** (static, cover) of a showroom/car, with a darkening legibility veil (radial + linear gradient over it).
