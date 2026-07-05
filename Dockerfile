@@ -8,6 +8,7 @@ COPY assets/ /usr/share/nginx/html/assets/
 COPY ["AhnoudCars.dc.html", "/usr/share/nginx/html/AhnoudCars.dc.html"]
 COPY ["Inventory CMS.dc.html", "/usr/share/nginx/html/Inventory CMS.dc.html"]
 COPY 404.dc.html /usr/share/nginx/html/404.dc.html
+COPY admin/ /usr/share/nginx/html/admin/
 
 # Serve the main page at / and wire nginx error_page to a plain 404.html path.
 RUN cp /usr/share/nginx/html/AhnoudCars.dc.html /usr/share/nginx/html/index.html \

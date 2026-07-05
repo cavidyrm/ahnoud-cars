@@ -73,11 +73,14 @@
       <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Ahnoud Cars · {{ tabSubtitle }}</div>
     </div>
 
-    <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
-      <button onClick="{{ onAdd }}" style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">
-        <span style="font-size: 15px; line-height: 0; margin-top: -1px;">+</span> Add car
-      </button>
-    </sc-if>
+    <nav class="cms-tabs" style="display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap;">
+      <a href="/admin/market.html" style="display: inline-flex; align-items: center; padding: 9px 14px; border-radius: var(--r-ui); border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #C4C4C2; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;">Market</a>
+      <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onAdd }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">
+          <span style="font-size: 15px; line-height: 0; margin-top: -1px;">+</span> Add car
+        </button>
+      </sc-if>
+    </nav>
   </header>
 
   <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">

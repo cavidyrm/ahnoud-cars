@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Market Research · Ahnoud Cars Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0A0A0B;
+      color: #F2F2F0;
+      font-family: 'Archivo', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      --accent: #E8410E;
+      --accent-hover: #FF5A26;
+      --r-card: 16px;
+      --r-ui: 8px;
+      --line: rgba(255,255,255,0.08);
+      --muted: #6E6E70;
+    }
+    input, button { font-family: inherit; }
+    a { color: inherit; }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding: 18px clamp(20px, 4vw, 44px);
+      background: rgba(10,10,11,0.86);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--r-card);
+      background: #1C1C1E;
+      flex-shrink: 0;
+    }
+    .logo img { width: 26px; height: 26px; object-fit: contain; }
+    .title-block { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .title-block h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+    .title-block p {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: var(--r-ui);
+      border: 1px solid rgba(255,255,255,0.14);
+      background: transparent;
+      color: #C4C4C2;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .nav-link:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-link.is-active {
+      border-color: rgba(232,65,14,0.45);
+      background: rgba(232,65,14,0.12);
+      color: #fff;
+    }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px clamp(20px, 4vw, 44px) 72px;
+    }
+
+    .notice {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      margin-bottom: 28px;
+      border-radius: var(--r-ui);
+      border: 1px solid rgba(232,65,14,0.28);
+      background: rgba(232,65,14,0.08);
+    }
+    .notice-dot {
+      width: 8px;
+      height: 8px;
+      margin-top: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .notice p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #D8D8D6;
+    }
+    .notice strong { color: #fff; font-weight: 600; }
+
+    .search-card {
+      padding: 24px;
+      border-radius: var(--r-card);
+      border: 1px solid var(--line);
+      background: #0D0D0F;
+      margin-bottom: 28px;
+    }
+    .search-card h2 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .search-card .lede {
+      margin: 0 0 22px;
+      font-size: 14px;
+      color: #9A9A9E;
+      line-height: 1.5;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 560px) {
+      .field-grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      background: #141417;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--r-ui);
+      padding: 13px 15px;
+      color: #F2F2F0;
+      font-size: 14.5px;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border-radius: var(--r-ui);
+      border: none;
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+      text-decoration: none;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: #F2F2F0;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #9A9A9E;
+    }
+    .btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,0.28); }
+    .btn-sm { padding: 7px 12px; font-size: 10px; }
+    .hint {
+      margin: 14px 0 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .hint-warn { color: #E0A92E; }
+
+    #results-panel { margin-bottom: 32px; }
+    #results-panel[hidden] { display: none !important; }
+    .results-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px 16px;
+      margin-bottom: 16px;
+    }
+    .results-head h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .results-head span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .source-card {
+      padding: 18px;
+      border-radius: var(--r-ui);
+      border: 1px solid var(--line);
+      background: #0D0D0F;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .source-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .source-head h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .source-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(54,179,126,0.12);
+      color: #36B37E;
+      border: 1px solid rgba(54,179,126,0.25);
+      white-space: nowrap;
+    }
+    .source-desc {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #9A9A9E;
+      flex: 1;
+    }
+    .source-url {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      color: #5A5A5C;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #recent-section[hidden] { display: none !important; }
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .recent-header h2 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .recent-list { display: flex; flex-direction: column; gap: 8px; }
+    .recent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: var(--r-ui);
+      border: 1px solid var(--line);
+      background: #0D0D0F;
+    }
+    .recent-query {
+      flex: 1;
+      min-width: 160px;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: #F2F2F0;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+    }
+    .recent-query:hover { color: var(--accent); }
+    .recent-when {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <span class="logo"><img src="/assets/ahnoud-mark-light.svg" alt="Ahnoud Cars"></span>
+    <div class="title-block">
+      <h1>Market Research</h1>
+      <p>Ahnoud Cars · Compare listing prices</p>
+    </div>
+    <nav class="header-nav" aria-label="Admin">
+      <a class="nav-link is-active" href="/admin/market.html" aria-current="page">Market</a>
+      <a class="nav-link" href="/Inventory%20CMS.dc.html">Inventory</a>
+      <a class="nav-link" href="/">Public site</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="notice" role="note">
+      <span class="notice-dot" aria-hidden="true"></span>
+      <p>
+        <strong>No scraping — live prices on each site.</strong>
+        This tool builds search links to Dubicars, Dubizzle, and YallaMotor.
+        Open a link to see current listings and AED prices there. Your server never contacts those sites.
+      </p>
+    </div>
+
+    <section class="search-card" aria-labelledby="search-heading">
+      <h2 id="search-heading">Search the market</h2>
+      <p class="lede">Enter a make and model (optionally a year). We’ll prepare outbound searches you can open in new tabs.</p>
+
+      <form id="search-form">
+        <div class="field-grid">
+          <label>
+            Make &amp; model
+            <input id="query" type="text" name="query" placeholder="Toyota Land Cruiser" autocomplete="off" required>
+          </label>
+          <label>
+            Year <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span>
+            <input id="year" type="number" name="year" placeholder="2022" min="1980" max="2030" inputmode="numeric">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Build search links</button>
+          <button class="btn btn-secondary" type="button" id="open-all">Open all sites</button>
+        </div>
+        <p class="hint" id="search-hint">Enter a make and model to build search links.</p>
+      </form>
+    </section>
+
+    <section id="results-panel" hidden aria-live="polite">
+      <div class="results-head">
+        <h2>Search links</h2>
+        <span>Query: <strong id="results-query"></strong></span>
+      </div>
+      <div class="source-grid" id="source-grid"></div>
+    </section>
+
+    <section id="recent-section" hidden aria-labelledby="recent-heading">
+      <div class="recent-header">
+        <h2 id="recent-heading">Recent searches</h2>
+        <button class="btn btn-ghost btn-sm" type="button" id="clear-recent">Clear</button>
+      </div>
+      <div class="recent-list" id="recent-list"></div>
+    </section>
+  </main>
+
+  <script src="/admin/market.js"></script>
+</body>
+</html>
