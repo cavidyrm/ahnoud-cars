@@ -9,10 +9,13 @@ services:
     image: ghcr.io/cavidyrm/ahnoud-cars:latest
     container_name: ahnoud-cars
     restart: unless-stopped
+    depends_on:
+      - scraper
     ports:
       - "3003:80"
     networks:
       - traefik-public
+      - internal
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik-public"
@@ -26,6 +29,15 @@ services:
       - "traefik.http.routers.ahnoud-cars-http.middlewares=ahnoud-cars-redirect-https"
       - "traefik.http.middlewares.ahnoud-cars-redirect-https.redirectscheme.scheme=https"
 
+  scraper:
+    image: ghcr.io/cavidyrm/ahnoud-cars-scraper:latest
+    container_name: ahnoud-cars-scraper
+    restart: unless-stopped
+    networks:
+      - internal
+
 networks:
   traefik-public:
     external: true
+  internal:
+    driver: bridge

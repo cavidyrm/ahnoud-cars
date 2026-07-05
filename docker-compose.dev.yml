@@ -1,0 +1,22 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8088:80"
+    depends_on:
+      - scraper
+    networks:
+      - internal
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.scraper
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
