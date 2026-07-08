@@ -1,7 +1,7 @@
 # Handoff: Ahnoud Cars — Dealership Website + Inventory CMS
 
 ## Overview
-Ahnoud Cars is a premium used/new car dealership based on Sheikh Zayed Road, Dubai (est. 2021). This package contains two design references:
+Ahnoud Cars is a premium used/new car dealership based on Sheikh Zayed Road, Dubai (est. 2012). This package contains two design references:
 
 1. **AhnoudCars** — the public marketing website: a dark, editorial, "spec-sheet" themed single page (hero, stats band, filterable car collection, why-us, reviews, contact) with a light/dark theme toggle.
 2. **Inventory CMS** — an internal admin panel to add, edit, search, and remove cars from the collection (same data model as the public car detail modal).
@@ -38,15 +38,16 @@ A single scrolling page. A floating pill **navigation bar** is fixed to the bott
 
 #### 2. Hero (full-viewport)
 - **Full-bleed background image** (static, cover) of a showroom/car, with a darkening legibility veil (radial + linear gradient over it).
-- **Top bar**: left = logo mark + "AHNOUD CARS" wordmark with "EST. 2021 · DUBAI" beneath, plus a hairline-separated vertical credentials list "INSPECTED / DOCUMENTED / DELIVERED"; right = "● SHOWROOM" indicator (orange dot + mono label).
+- **Top bar**: left = logo mark + "AHNOUD CARS" wordmark with "EST. 2012 · DUBAI" beneath, plus a hairline-separated vertical credentials list "INSPECTED / DOCUMENTED / DELIVERED"; right = "● SHOWROOM" indicator (orange dot + mono label).
 - **Center**: a giant two-word display headline split left/right of a central **viewfinder** column. Left word and right word are `clamp(30px,5cqi,80px)`, weight 800, display font.
 - **Viewfinder** (the "spotlight"): a portrait framed image with corner brackets, a "01 — SPOTLIGHT" mono label with ‹ › circular arrows, and a bottom caption line `01.  ⟨Car name⟩  .23`. It is an **auto-advancing slideshow** (every ~5.2s) of 5 featured cars, with manual ‹ › arrows and clickable dots. Each slide left-to-right slides in (transform translateX + slight scale, ~1.05s) once its image preloads. The background does NOT change with the slideshow (static).
 - **Bottom bar**: left = "© 2026" + "Grid" link; right = a **live timecode clock** (HH:MM:SS, ticks every second, with a pulsing orange dot).
 
-#### 3. Stats Band (orange)
-- Full-width 4-column grid, solid orange `#E8410E` background, dark hairline dividers `rgba(0,0,0,0.14)`.
-- Each cell: a big white numeral `60px` weight 700 (with a hover lift+scale animation), and a mono uppercase label `13px` `rgba(255,255,255,0.82)` beneath.
-- Cells: **120+** Cars in stock · **14** Years trading · **200pt** Inspection · **4.9** Google rating. ("+", "pt" suffixes are translucent white spans.)
+#### 3. Stats Band
+- Full-width 4-column grid on the **page background** (`--c-bg`), hairline dividers `--c-line`.
+- Each cell: a big numeral `60px` weight 700 in `--c-text` (with a hover lift+scale animation), and a mono uppercase label `13px` (`--c-text` at 0.75 opacity) beneath. "+"/"pt" suffixes are 0.6-opacity spans.
+- **Hover fill effect:** hovering a cell sweeps a solid orange `#E8410E` layer across it **left → right** (a `::before` layer scaling `scaleX(0) → scaleX(1)`, `transform-origin: left center`, `0.55s cubic-bezier(.65,.05,.36,1)`); the numeral and label transition to white (`0.4s ease`) over the fill. Content sits above the fill layer (`position: relative; z-index: 1`; cell has `overflow: hidden`).
+- Cells: **120+** Cars in stock · **14** Years trading · **200pt** Inspection · **4.9** Google rating.
 - Cell padding `60px 52px`. Responsive `minmax(210px,1fr)`; numerals shrink to 44px on mobile.
 
 #### 4. Collection (`#collection`)
@@ -108,12 +109,15 @@ Error page in the same dark editorial theme. Faint grid + a tilted orange "road"
 - **Hero slideshow**: auto-advance ~5.2s; ‹ › arrows and dots; left-to-right transform slide ~1.05s; images preloaded to avoid blank frames; background static.
 - **Live clock**: hero timecode updates every second (HH:MM:SS, local time).
 - **Card hover**: photo zoom 1.07×/0.6s; card lift + shadow.
+- **Stats band hover**: orange left→right wipe fill per cell (see section 3); text eases to white.
+- **Touch scrolling**: photos must never block touch scroll — do not set `touch-action: none` on images except while an explicit drag/crop interaction is active.
 - **Filters**: multi-select pill dropdowns; live result count; reset; combine AND-across / OR-within.
 - **Modal**: open on card click; Esc to close; backdrop click to close; thumbnail switching; "enquire" routes the model name into the contact form's "Car of interest".
 - **Contact form**: client-side success overlay only (no backend in prototype).
 - **CMS CRUD**: add/edit via drawer; delete with inline confirm; search filter; all in-memory in the prototype (resets on reload). **Wire to a real persistence layer/API in production.**
 - **Reveal-on-scroll**: elements with staggered fade/translate as they enter the viewport (IntersectionObserver in the prototype).
 - **Reduced motion**: prototype respects `prefers-reduced-motion` by skipping scroll reveals.
+- **SEO head tags**: title/description/canonical/OG/Twitter/JSON-LD live in the page head (see SEO section).
 
 ## Responsive Behavior
 - Both designs are fully responsive and additionally ship a **Device preview** (Desktop/Tablet/Mobile) that frames the page in a device — this is a *prototype preview aid only*; do not reproduce the device frame in production, just honor the breakpoints.
@@ -131,6 +135,24 @@ Error page in the same dark editorial theme. Faint grid + a tilted orange "road"
   km (number), fuel, trans, engine, power, color, status ('Available'|'Reserved'|'Sold'),
   hl: string[] /* highlights */, photos: string[] /* optional */ }
 ```
+
+## SEO
+The prototypes now carry the on-page SEO groundwork — keep all of it when recreating in production:
+
+**Already in the prototypes (public site):**
+- `<title>` + meta description; canonical `https://ahnoudcars.com/`; `robots: index, follow`; SVG favicon; `theme-color`.
+- Full **Open Graph + Twitter card** tags. `og:image` points at `https://ahnoudcars.com/og/cover.jpg` — the asset is included in this bundle (`og/cover.jpg`, 1200×630, with its HTML source `og/og-cover-source.html`). The car photo in it is an Unsplash placeholder — swap in the dealership's own photography before launch.
+- **JSON-LD `AutoDealer` schema** (name, address, phone, email, price range, founding date 2012, 4.9/280 aggregate rating).
+- A **visually-hidden `<h1>`** in the hero (the display headline is decorative split text); sections use proper `<h2>`/`<h3>`.
+- `404.dc.html` → `noindex, follow`; `Inventory CMS.dc.html` → `noindex, nofollow` (internal — also put it behind auth on a non-indexed subdomain).
+
+**Required in production (can't be done in a static prototype):**
+- **SSR or SSG** — the content (especially the car inventory) must be in the initial HTML, not client-rendered.
+- **Per-car detail pages** at crawlable URLs (`/cars/{make}-{model}-{id}`) instead of the modal-only view — each with its own title/description/OG tags and JSON-LD **`Vehicle` + `Offer`** schema (make, model, year, mileage, price AED, condition, availability). The modal can stay as the in-page UX with the URL updating (history API).
+- `sitemap.xml` (home + every car page, updated on inventory change) and `robots.txt` (allow all; disallow the CMS).
+- Descriptive **`alt` text on every car photo** ("2024 Mercedes-Benz G 63 AMG for sale in Dubai — front three-quarter") — the prototype's `image-slot` placeholders don't have alts.
+- Real **Google Business Profile** link-up; keep NAP (name/address/phone) identical everywhere.
+- **Core Web Vitals**: serve car images as responsive AVIF/WebP with width/height set (no layout shift), lazy-load below-the-fold images, preload the hero image and fonts, self-host fonts if possible.
 
 ## Design Tokens
 
@@ -171,7 +193,7 @@ Error page in the same dark editorial theme. Faint grid + a tilted orange "road"
 - Card hover shadow `0 28px→14px ...`; modal shadows deep. Transitions 0.2–0.65s, easing `cubic-bezier(.2,.7,.2,1)`.
 
 ## Assets
-- **Logo mark** (provided in `assets/`): `ahnoud-mark-light.svg` (cream `#F2F0EC`, for dark backgrounds) and `ahnoud-mark-dark.svg` (dark `#1A0E07`, for the orange footer). A stylized monogram inside a square frame. `ahnoud-logo-tile.png` is a legacy raster tile (no longer used). Use the SVGs.
+- **Logo mark** (provided in `assets/`): `ahnoud-mark-light.svg` (cream `#F2F0EC`, for dark backgrounds) and `ahnoud-mark-dark.svg` (dark `#1A0E07`, for the orange footer). A stylized monogram inside a square frame.
 - **Car photography:** the prototype hotlinks real photos from **Unsplash** (`images.unsplash.com/photo-…`), matched per car by model. These are placeholders — **replace with the dealership's own licensed photography** in production. The card/hero/modal photo "slots" are drag-and-drop in the prototype (`image-slot.js`); in production use real `<img>`/upload fields.
 - **Fonts:** Google Fonts — Plus Jakarta Sans, Inter, JetBrains Mono.
 - **Map:** the contact map is a CSS illustration placeholder — swap for a real embed.
@@ -180,7 +202,8 @@ Error page in the same dark editorial theme. Faint grid + a tilted orange "road"
 - `AhnoudCars.dc.html` — the public website prototype (template + logic).
 - `404.dc.html` — the not-found error page (template only).
 - `Inventory CMS.dc.html` — the admin CMS prototype.
-- `assets/` — logo SVGs (`ahnoud-mark-light.svg`, `ahnoud-mark-dark.svg`) + legacy tile PNG.
+- `assets/` — logo SVGs (`ahnoud-mark-light.svg`, `ahnoud-mark-dark.svg`).
+- `og/` — the social share image (`cover.jpg`, 1200×630) and the HTML it was rendered from (`og-cover-source.html`).
 - `support.js` — the Design-Component runtime that boots the `.dc.html` files **(prototyping scaffolding — do not port to production).**
 - `image-slot.js` — the drag-and-drop image placeholder web component used in the prototypes **(do not port; use real image/upload components).**
 

@@ -9,6 +9,10 @@
 <x-dc>
 <helmet>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Inventory CMS — Ahnoud Cars (internal)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/ahnoud-mark-light.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0A0A0B">
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #0A0A0B; color: #F2F2F0; font-family: 'Archivo', sans-serif; -webkit-font-smoothing: antialiased; --r-card: 16px; --r-ui: 8px; }
@@ -20,6 +24,7 @@
   @keyframes cmsDrawerIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes cmsFade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes cmsRowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes cmsSpin { to { transform: rotate(360deg); } }
 
   /* ===== responsive reflow (real viewports) ===== */
   @media (max-width: 860px) {
@@ -73,14 +78,16 @@
       <div style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Ahnoud Cars · {{ tabSubtitle }}</div>
     </div>
 
-    <nav class="cms-tabs" style="display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap;">
-      <a href="/admin/market.html" style="display: inline-flex; align-items: center; padding: 9px 14px; border-radius: var(--r-ui); border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #C4C4C2; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;">Market</a>
-      <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
-        <button onClick="{{ onAdd }}" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">
-          <span style="font-size: 15px; line-height: 0; margin-top: -1px;">+</span> Add car
-        </button>
-      </sc-if>
-    </nav>
+    <div class="cms-tabs" style="display: flex; gap: 4px; margin-left: 26px; background: #141417; border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r-ui); padding: 4px;">
+      <button onClick="{{ onTabInventory }}" style="padding: 8px 16px; border: none; border-radius: calc(var(--r-ui) - 2px); cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; transition: all .2s; background: {{ tabInvBg }}; color: {{ tabInvColor }};">Inventory</button>
+      <button onClick="{{ onTabMarket }}" style="padding: 8px 16px; border: none; border-radius: calc(var(--r-ui) - 2px); cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; transition: all .2s; background: {{ tabMktBg }}; color: {{ tabMktColor }};">Market prices</button>
+    </div>
+
+    <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
+      <button onClick="{{ onAdd }}" style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s;" style-hover="background: #FF5A26;">
+        <span style="font-size: 15px; line-height: 0; margin-top: -1px;">+</span> Add car
+      </button>
+    </sc-if>
   </header>
 
   <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ true }}">
@@ -185,6 +192,98 @@
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6E6E70;">Try a different make or model, or add a new car.</div>
       </div>
     </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ===== MARKET PRICES TAB ===== -->
+  <sc-if value="{{ tabMarket }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="Market prices" style="padding: 38px clamp(20px,4vw,44px) 60px; flex: 1; width: 100%; max-width: 1020px;">
+
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #E8410E; margin-bottom: 10px;">Dubai market lookup</div>
+    <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px;">What's it going for?</div>
+    <div style="font-size: 14px; color: #9A9A9E; max-width: 560px; line-height: 1.55; margin-bottom: 28px;">Search a model to get an AI-estimated price range across Dubai's marketplaces. Estimates only — not live listing data.</div>
+
+    <!-- search form -->
+    <div class="cms-form-grid" style="display: grid; grid-template-columns: 1.2fr 1.6fr 0.8fr auto; gap: 12px; align-items: end; margin-bottom: 34px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Make</label>
+        <input value="{{ mktMake }}" onInput="{{ onMktMake }}" onKeyDown="{{ onMktKey }}" placeholder="Porsche" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Model</label>
+        <input value="{{ mktModel }}" onInput="{{ onMktModel }}" onKeyDown="{{ onMktKey }}" placeholder="911 Carrera S" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: #6E6E70;">Year</label>
+        <input value="{{ mktYear }}" onInput="{{ onMktYear }}" onKeyDown="{{ onMktKey }}" type="number" placeholder="2023" style="background: #141417; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--r-ui); padding: 13px 15px; color: #F2F2F0; font-size: 14.5px; outline: none;" style-focus="border-color: #E8410E;">
+      </div>
+      <button onClick="{{ onMktSearch }}" style="display: inline-flex; align-items: center; gap: 9px; padding: 14px 22px; background: #E8410E; border: none; border-radius: var(--r-ui); color: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; transition: background .2s; white-space: nowrap;" style-hover="background: #FF5A26;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+        Search
+      </button>
+    </div>
+
+    <sc-if value="{{ mktError }}" hint-placeholder-val="{{ false }}">
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #E0604A; padding: 16px 18px; border: 1px solid rgba(176,48,26,0.4); background: rgba(176,48,26,0.08); border-radius: var(--r-ui); margin-bottom: 28px;">{{ mktError }}</div>
+    </sc-if>
+
+    <sc-if value="{{ mktLoading }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; align-items: center; gap: 16px; padding: 40px 24px; border: 1px dashed rgba(255,255,255,0.14); border-radius: var(--r-ui);">
+        <span style="width: 22px; height: 22px; border: 2.5px solid rgba(255,255,255,0.15); border-top-color: #E8410E; border-radius: 50%; animation: cmsSpin .8s linear infinite; flex-shrink: 0;"></span>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: #9A9A9E;">Checking Dubai market prices for {{ mktLoadingLabel }}…</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mktIdle }}" hint-placeholder-val="{{ true }}">
+      <div style="text-align: center; padding: 70px 20px; border: 1px dashed rgba(255,255,255,0.12); border-radius: var(--r-ui);">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Search a model to see its market range.</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6E6E70;">e.g. 2023 Porsche 911 Carrera S · 2024 Nissan Patrol Platinum</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ mktHasResult }}" hint-placeholder-val="{{ false }}">
+      <div style="border: 1px solid rgba(255,255,255,0.1); border-radius: var(--r-card); overflow: hidden; animation: cmsRowIn .3s both;">
+
+        <!-- summary -->
+        <div style="display: flex; align-items: flex-start; gap: 24px; flex-wrap: wrap; padding: 28px 30px; border-bottom: 1px solid rgba(255,255,255,0.08); background: #0D0D0F;">
+          <div style="flex: 1; min-width: 220px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E6E70; margin-bottom: 10px;">{{ mktResultLabel }} · Dubai market range</div>
+            <div style="font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1;">{{ mktRangeFmt }}</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #9A9A9E; margin-top: 10px;">Typical asking price · {{ mktTypicalFmt }}</div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+            <span style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--r-ui); background: {{ mktTrendBg }}; border: 1px solid {{ mktTrendBorder }}; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: {{ mktTrendColor }};">{{ mktTrendArrow }} {{ mktTrendLabel }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #5A5A5C;">vs last month</span>
+          </div>
+        </div>
+
+        <!-- marketplace breakdown -->
+        <div style="padding: 24px 30px 28px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6E6E70; margin-bottom: 18px;">By marketplace</div>
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <sc-for list="{{ mktRows }}" as="m" hint-placeholder-count="0">
+              <div style="display: grid; grid-template-columns: 130px 1fr 210px; gap: 18px; align-items: center;">
+                <div style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em;">{{ m.name }}</div>
+                <div style="position: relative; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;">
+                  <div style="position: absolute; top: 0; bottom: 0; border-radius: 4px; background: linear-gradient(90deg, rgba(232,65,14,0.55), #E8410E); left: {{ m.barLeft }}; width: {{ m.barWidth }};"></div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: #F2F2F0;">{{ m.rangeFmt }}</div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: #6E6E70; margin-top: 3px;">{{ m.listingsFmt }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ mktNote }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #8C8A86; line-height: 1.6; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.07);">{{ mktNote }}</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: #5A5A5C; margin-top: 14px;">AI-generated estimate. Verify against live listings before pricing a car.</div>
+    </sc-if>
+
   </div>
   </sc-if>
 
@@ -348,6 +447,15 @@ class Component extends DCLogic {
       { id: 12, make: 'Tesla',         model: 'Model S Plaid',       body: 'Sedan', year: 2023, cond: 'Used', price: 420000,  km: 16000, fuel: 'Electric', trans: 'Single-speed', engine: 'Tri-Motor',    power: '1020 hp', color: 'Pearl White',  status: 'Sold',      hl: ['Yoke Steering', '1020 hp', 'Premium Connectivity'] },
     ],
     query: '',
+    tab: 'inventory',
+    mktMake: '',
+    mktModel: '',
+    mktYear: '2023',
+    mktLoading: false,
+    mktLoadingLabel: '',
+    mktError: '',
+    mktResult: null,
+    mktResultLabel: '',
     drawerOpen: false,
     editId: null,
     confirmId: null,
@@ -509,6 +617,32 @@ class Component extends DCLogic {
     }
   }
 
+  async searchMarket() {
+    const make = this.state.mktMake.trim();
+    const model = this.state.mktModel.trim();
+    const year = String(this.state.mktYear).trim() || '2023';
+    if (!make || !model) {
+      this.setState({ mktError: 'Enter a make and a model to search.' });
+      return;
+    }
+    const label = year + ' ' + make + ' ' + model;
+    this.setState({ mktLoading: true, mktLoadingLabel: label, mktError: '', mktResult: null });
+    try {
+      const prompt = 'You are a UAE used-car pricing analyst. Estimate the current Dubai market asking-price range in AED for a ' + label + ' in good condition with average mileage for its age. Base your estimate on typical listings on Dubai marketplaces (Dubizzle, CarSwitch, Kavak, Dubicars).\n\nRespond with ONLY a JSON object, no markdown, in exactly this shape:\n{"low": <number AED>, "high": <number AED>, "typical": <number AED>, "trendPct": <number, monthly % change, negative if falling>, "marketplaces": [{"name": "Dubizzle", "low": <number>, "high": <number>, "listings": <estimated active listing count>}, {"name": "CarSwitch", ...}, {"name": "Kavak", ...}, {"name": "Dubicars", ...}], "note": "<one short sentence on what drives the price for this model in the UAE>"}\n\nIf the make/model does not correspond to a real car, respond with exactly {"error": "unknown model"}.';
+      const text = await window.claude.complete(prompt);
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error('no json');
+      const data = JSON.parse(match[0]);
+      if (data.error || !data.low || !data.high) {
+        this.setState({ mktLoading: false, mktError: 'Could not find pricing for "' + label + '" — check the make and model spelling.' });
+        return;
+      }
+      this.setState({ mktLoading: false, mktResult: data, mktResultLabel: label });
+    } catch (e) {
+      this.setState({ mktLoading: false, mktError: 'Something went wrong fetching the estimate. Try again.' });
+    }
+  }
+
   removeCar(id) {
     this.setState({ cars: this.state.cars.filter((c) => c.id !== id), confirmId: null });
   }
@@ -560,9 +694,62 @@ class Component extends DCLogic {
     const reserved = cars.filter((c) => c.status === 'Reserved').length;
     const sold = cars.filter((c) => c.status === 'Sold').length;
 
+    const onMkt = this.state.tab === 'market';
+    const fmtAED = (n) => 'AED ' + Math.round(Number(n) || 0).toLocaleString();
+    const r = this.state.mktResult;
+    let mktRows = [], mktTrend = null;
+    if (r) {
+      const lows = (r.marketplaces || []).map((m) => m.low).concat([r.low]);
+      const highs = (r.marketplaces || []).map((m) => m.high).concat([r.high]);
+      const min = Math.min.apply(null, lows), max = Math.max.apply(null, highs);
+      const span = Math.max(max - min, 1);
+      mktRows = (r.marketplaces || []).map((m) => ({
+        name: m.name,
+        rangeFmt: fmtAED(m.low) + ' – ' + fmtAED(m.high),
+        listingsFmt: (m.listings ? '~' + Number(m.listings).toLocaleString() : '—') + ' listings',
+        barLeft: (((m.low - min) / span) * 100).toFixed(1) + '%',
+        barWidth: Math.max(((m.high - m.low) / span) * 100, 2).toFixed(1) + '%',
+      }));
+      const pct = Number(r.trendPct) || 0;
+      if (pct > 0.05)      mktTrend = { arrow: '↑', label: '+' + pct.toFixed(1) + '%', color: '#36B37E', bg: 'rgba(54,179,126,0.12)', border: 'rgba(54,179,126,0.3)' };
+      else if (pct < -0.05) mktTrend = { arrow: '↓', label: pct.toFixed(1) + '%', color: '#E0604A', bg: 'rgba(176,48,26,0.12)', border: 'rgba(176,48,26,0.35)' };
+      else                  mktTrend = { arrow: '→', label: 'Stable', color: '#B9B9BD', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.14)' };
+    }
+
     return {
-      tabInventory: true,
-      tabSubtitle: 'Manage collection',
+      tabInventory: !onMkt,
+      tabMarket: onMkt,
+      tabSubtitle: onMkt ? 'Dubai market prices' : 'Manage collection',
+      onTabInventory: () => this.setState({ tab: 'inventory' }),
+      onTabMarket: () => this.setState({ tab: 'market' }),
+      tabInvBg: !onMkt ? '#E8410E' : 'transparent',
+      tabInvColor: !onMkt ? '#fff' : '#8C8A86',
+      tabMktBg: onMkt ? '#E8410E' : 'transparent',
+      tabMktColor: onMkt ? '#fff' : '#8C8A86',
+
+      mktMake: this.state.mktMake,
+      mktModel: this.state.mktModel,
+      mktYear: this.state.mktYear,
+      onMktMake: (e) => this.setState({ mktMake: e.target.value }),
+      onMktModel: (e) => this.setState({ mktModel: e.target.value }),
+      onMktYear: (e) => this.setState({ mktYear: e.target.value }),
+      onMktKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.searchMarket(); } },
+      onMktSearch: () => this.searchMarket(),
+      mktLoading: this.state.mktLoading,
+      mktLoadingLabel: this.state.mktLoadingLabel,
+      mktError: this.state.mktError,
+      mktIdle: !this.state.mktLoading && !this.state.mktError && !r,
+      mktHasResult: !!r,
+      mktResultLabel: this.state.mktResultLabel,
+      mktRangeFmt: r ? fmtAED(r.low) + ' – ' + fmtAED(r.high) : '',
+      mktTypicalFmt: r ? fmtAED(r.typical) : '',
+      mktTrendArrow: mktTrend ? mktTrend.arrow : '',
+      mktTrendLabel: mktTrend ? mktTrend.label : '',
+      mktTrendColor: mktTrend ? mktTrend.color : '#B9B9BD',
+      mktTrendBg: mktTrend ? mktTrend.bg : 'transparent',
+      mktTrendBorder: mktTrend ? mktTrend.border : 'transparent',
+      mktRows,
+      mktNote: (r && r.note) ? String(r.note) : false,
 
       rows,
       isEmpty: rows.length === 0,
