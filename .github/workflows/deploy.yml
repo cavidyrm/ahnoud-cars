@@ -32,14 +32,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
 
-      - name: Build and push scraper image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./Dockerfile.scraper
-          push: true
-          tags: ghcr.io/${{ github.repository }}-scraper:latest
-
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.2.5
         with:
